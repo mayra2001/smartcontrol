@@ -1,6 +1,6 @@
 {
-    "name": "smartcontrol",
-    "short_name": "smartcontrol",
+    "name": "smart.control",
+    "short_name": "smart.control",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

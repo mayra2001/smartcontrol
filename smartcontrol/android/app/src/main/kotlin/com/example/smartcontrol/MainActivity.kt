@@ -1,4 +1,4 @@
-package com.example.smartcontrol
+package smart.control
 
 import io.flutter.embedding.android.FlutterActivity
 

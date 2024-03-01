@@ -1,4 +1,4 @@
-# smartcontrol
+# smart.control
 
 A new Flutter project.
 

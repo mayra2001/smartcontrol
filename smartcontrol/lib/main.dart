@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:logger/logger.dart';
+//import 'package:firebase_core/firebase_core.dart';
+//import 'package:firebase_messaging/firebase_messaging.dart';
 
 class IrrigationApp extends StatefulWidget {
   const IrrigationApp({super.key});
@@ -16,11 +18,34 @@ class _IrrigationAppState extends State<IrrigationApp> {
   bool motorLigado = false;
   final Logger logger = Logger();
 
+  //late FirebaseMessaging _firebaseMessaging;
+
   @override
   void initState() {
+    //initializeFirebase();
     super.initState();
     initializeSocket();
   }
+/*
+  void initializeFirebase() async {
+    await Firebase.initializeApp();
+    _firebaseMessaging = FirebaseMessaging.instance;
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      print("Mensagem em primeiro plano: $message");
+      // Adicione aqui o código para lidar com a notificação em primeiro plano
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+      print("Aplicativo aberto a partir de uma notificação: $message");
+      // Adicione aqui o código para lidar com a notificação quando o aplicativo é aberto a partir dela
+    });
+
+    FirebaseMessaging.onBackgroundMessage((message) async {
+      print("Mensagem recebida em segundo plano: $message");
+      // Adicione aqui o código para lidar com a notificação em segundo plano
+    });
+  }*/
 
   void initializeSocket() {
     // Conectar ao servidor do Arduino mudar apos com a porta do arduino
