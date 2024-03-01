@@ -1,24 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:logger/logger.dart';
 
 class IrrigationApp extends StatefulWidget {
+  const IrrigationApp({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _IrrigationAppState createState() => _IrrigationAppState();
 }
 
 class _IrrigationAppState extends State<IrrigationApp> {
   late IO.Socket socket;
+  bool modoAutomatico = false;
+  bool motorLigado = false;
+  final Logger logger = Logger();
 
   @override
   void initState() {
     super.initState();
-    // Conectar ao servidor do Arduino
-    socket = IO.io('http://endereco_do_seu_arduino:porta');
+    initializeSocket();
+  }
+
+  void initializeSocket() {
+    // Conectar ao servidor do Arduino mudar apos com a porta do arduino
+    socket = IO.io('http://dummy_socket_server:3000');
     socket.connect();
 
     // Ouvir mensagens do servidor
-    socket.on('message', (data) {
-      print('Mensagem recebida: $data');
+    socket.on('umidade_solo', (data) {
+      logger.d('Umidade do solo: $data');
+      // Atualiza a interface do usuário com os dados de umidade recebidos
+    });
+
+    socket.on('temperatura_ambiente', (data) {
+      logger.i('Temperatura ambiente: $data');
+      // Atualiza a interface do usuário com os dados de temperatura recebidos
+    });
+
+    socket.on('motor_ligado', (data) {
+      logger.i('Motor ligado');
+      setState(() {
+        motorLigado = true; // Atualiza o estado do motor na tela
+      });
+    });
+
+    socket.on('motor_desligado', (data) {
+      logger.i('Motor desligado');
+      setState(() {
+        motorLigado = false; // Atualiza o estado do motor na tela
+      });
     });
   }
 
@@ -32,28 +63,83 @@ class _IrrigationAppState extends State<IrrigationApp> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Irrigação Automática'),
+        title: const Text('Irrigação Automática'),
+        backgroundColor: Colors.green,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                // Enviar mensagem para ligar o motor
-                socket.emit('ligar_motor', 'ligar');
-              },
-              child: Text('Ligar Motor'),
+      body: Column(
+        children: <Widget>[
+          Container(
+            color: Colors.grey[200],
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(
+                  'Estado do Motor: ${motorLigado ? 'Ligado' : 'Desligado'}',
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Umidade do Solo:',
+                  style: TextStyle(fontSize: 18),
+                ),
+                const Text(
+                  'Temperatura Ambiente:',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                // Enviar mensagem para desligar o motor
-                socket.emit('desligar_motor', 'desligar');
-              },
-              child: Text('Desligar Motor'),
+          ),
+          const SizedBox(height: 16),
+          ExpansionTile(
+            title: const Text('Operação Manual'),
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  ElevatedButton(
+                    onPressed: () {
+                      socket.emit('ligar_motor', 'ligar');
+                      setState(() {
+                        motorLigado = true;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(primary: Colors.green),
+                    child: const Text('Ligar Motor'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      socket.emit('desligar_motor', 'desligar');
+                      setState(() {
+                        motorLigado = false;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(primary: Colors.red),
+                    child: const Text('Desligar Motor'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                modoAutomatico = !modoAutomatico;
+                if (modoAutomatico) {
+                  socket.emit('modo_automatico', 'ativar');
+                } else {
+                  socket.emit('modo_automatico', 'desativar');
+                }
+              });
+            },
+            child: Text(
+              modoAutomatico
+                  ? 'Modo Automático: Ligado'
+                  : 'Modo Automático: Desligado',
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -62,6 +148,9 @@ class _IrrigationAppState extends State<IrrigationApp> {
 void main() {
   runApp(MaterialApp(
     title: 'Irrigação Automática',
-    home: IrrigationApp(),
+    theme: ThemeData(
+      primaryColor: Colors.green,
+    ),
+    home: const IrrigationApp(),
   ));
 }

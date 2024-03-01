@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "653045279746",
+    "project_id": "auto-controlsmart",
+    "storage_bucket": "auto-controlsmart.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:653045279746:android:d1ed92e141418273ed4b1b",
+        "android_client_info": {
+          "package_name": "smart.control"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALjFVQm-SkWTdClYA6zIovPyJ5Lhr0420"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
