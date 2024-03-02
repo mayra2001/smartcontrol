@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:logger/logger.dart';
-//import 'package:firebase_core/firebase_core.dart';
-//import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 
 class IrrigationApp extends StatefulWidget {
   const IrrigationApp({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _IrrigationAppState createState() => _IrrigationAppState();
 }
 
@@ -18,18 +18,19 @@ class _IrrigationAppState extends State<IrrigationApp> {
   bool motorLigado = false;
   final Logger logger = Logger();
 
-  //late FirebaseMessaging _firebaseMessaging;
+  late FirebaseMessaging _firebaseMessaging;
 
   @override
   void initState() {
-    //initializeFirebase();
+    initializeFirebase();
     super.initState();
-    initializeSocket();
+    // initializeSocket(); // Comentado para não conectar ao Arduino
   }
-/*
+
   void initializeFirebase() async {
-    await Firebase.initializeApp();
     _firebaseMessaging = FirebaseMessaging.instance;
+
+    // Restante do seu código de inicialização Firebase
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       print("Mensagem em primeiro plano: $message");
@@ -45,7 +46,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
       print("Mensagem recebida em segundo plano: $message");
       // Adicione aqui o código para lidar com a notificação em segundo plano
     });
-  }*/
+  }
 
   void initializeSocket() {
     // Conectar ao servidor do Arduino mudar apos com a porta do arduino
@@ -80,7 +81,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
 
   @override
   void dispose() {
-    socket.disconnect();
+    // socket.disconnect(); // Comentado para não desconectar do servidor do Arduino
     super.dispose();
   }
 
@@ -124,7 +125,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
                 children: <Widget>[
                   ElevatedButton(
                     onPressed: () {
-                      socket.emit('ligar_motor', 'ligar');
+                      // socket.emit('ligar_motor', 'ligar'); // Comentado para não enviar comando ao Arduino
                       setState(() {
                         motorLigado = true;
                       });
@@ -134,7 +135,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      socket.emit('desligar_motor', 'desligar');
+                      // socket.emit('desligar_motor', 'desligar'); // Comentado para não enviar comando ao Arduino
                       setState(() {
                         motorLigado = false;
                       });
@@ -152,9 +153,9 @@ class _IrrigationAppState extends State<IrrigationApp> {
               setState(() {
                 modoAutomatico = !modoAutomatico;
                 if (modoAutomatico) {
-                  socket.emit('modo_automatico', 'ativar');
+                  // socket.emit('modo_automatico', 'ativar'); // Comentado para não enviar comando ao Arduino
                 } else {
-                  socket.emit('modo_automatico', 'desativar');
+                  // socket.emit('modo_automatico', 'desativar'); // Comentado para não enviar comando ao Arduino
                 }
               });
             },
@@ -170,7 +171,16 @@ class _IrrigationAppState extends State<IrrigationApp> {
   }
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    print('Erro ao inicializar o Firebase: $e');
+  }
+
   runApp(MaterialApp(
     title: 'Irrigação Automática',
     theme: ThemeData(
