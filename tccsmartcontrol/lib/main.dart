@@ -44,10 +44,11 @@ class _IrrigationAppState extends State<IrrigationApp> {
     _initializeLocalNotificationsPlugin();
 
     _databaseReference.child('dadosArduino').onChildChanged.listen((event) {
-      if (event.snapshot.key == 'mandaNotificação') {
+      if (event.snapshot.key == 'mandaNotificacao') {
         final bool? mostraNotificacao = event.snapshot.value as bool?;
         if (mostraNotificacao != null && mostraNotificacao) {
-          _showLocalNotification('Notificação', 'Aviso de Irrigação');
+          _showLocalNotification(
+              'Irrigação finalizada', 'Venha conferir no app o que foi gasto');
         }
       }
     });
@@ -214,6 +215,11 @@ class _IrrigationAppState extends State<IrrigationApp> {
                           }
                         },
                       ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Dados da ultima irrigação',
+                        style: TextStyle(fontSize: 22),
+                      ),
                       const SizedBox(height: 8),
                       FutureBuilder(
                         future:
@@ -235,7 +241,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             String tempoGasto =
                                 snapshot.data?.snapshot.value as String;
                             return Text(
-                              'Tempo gasto para a irrigação: $tempoGasto minutos',
+                              'Tempo total de irrigação: $tempoGasto',
                               style: const TextStyle(fontSize: 20),
                             );
                           }
