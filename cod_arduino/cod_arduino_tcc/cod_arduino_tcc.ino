@@ -16,11 +16,11 @@
 
 #include <addons/RTDBHelper.h>
 #include <DHT.h>
-#define DHT_PIN 4      // Pino ao qual o sensor DHT está conectado
-#define DHT_TYPE DHT11 // Tipo de sensor DHT (DHT11 ou DHT22)
+#define DHT_PIN 4 // pino D4
+#define DHT_TYPE DHT11
 DHT dht(DHT_PIN, DHT_TYPE);
 
-const int pinoSensor = A0; // PINO UTILIZADO PELO SENSOR DE UMIDADE DO SOLO
+const int pinoSensor = A0; // PINO UTILIZADO PELO SENSOR DE UMIDADE DO SOLO (POLO "vp" NO ESP32)
 
 #define WIFI_SSID "LIKE-SALA"
 #define WIFI_PASSWORD "992714904"
@@ -36,15 +36,15 @@ FirebaseConfig config;
 unsigned long sendDataPrevMillis = 0;
 unsigned long count = 0;
 int LED_BUILTIN = 2;
-int valorLido; // VARIÁVEL QUE ARMAZENA O PERCENTUAL DE UMIDADE DO SOLO
+int valorLido;
 
-int analogSoloSeco = 400;    // VALOR MEDIDO COM O SOLO SECO (VOCÊ PODE FAZER TESTES E AJUSTAR ESTE VALOR)
-int analogSoloMolhado = 150; // VALOR MEDIDO COM O SOLO MOLHADO (VOCÊ PODE FAZER TESTES E AJUSTAR ESTE VALOR)
-int percSoloSeco = 0;        // MENOR PERCENTUAL DO SOLO SECO (0% - NÃO ALTERAR)
-int percSoloMolhado = 100;   // MAIOR PERCENTUAL DO SOLO MOLHADO (100% - NÃO ALTERAR)
+int analogSoloSeco = 4095;    // VALOR MEDIDO COM O SOLO SECO
+int analogSoloMolhado = 1500; // VALOR MEDIDO COM O SOLO MOLHADO
+int percSoloSeco = 0;
+int percSoloMolhado = 100;
 
-bool modoAutomatico = false; // Estado do modo automático
-bool motorLigado = false;    // Estado do motor de água
+bool modoAutomatico = false;
+bool motorLigado = false;
 
 unsigned long tempoInicial = 0;
 unsigned long tempoFinal = 0;
@@ -177,9 +177,10 @@ void lerSensores()
 
 String lerUmidadeSolo()
 {
-  valorLido = constrain(analogRead(pinoSensor), analogSoloMolhado, analogSoloSeco);
+  valorLido = analogRead(pinoSensor);
+  valorLido = constrain(valorLido, analogSoloMolhado, analogSoloSeco);
   valorLido = map(valorLido, analogSoloMolhado, analogSoloSeco, percSoloMolhado, percSoloSeco);
-  return String(valorLido, 1);
+  return String(valorLido);
 }
 
 String lerTemperatura()
