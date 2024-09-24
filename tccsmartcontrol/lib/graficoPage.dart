@@ -98,7 +98,6 @@ class _GraficoPageState extends State<GraficoPage> {
 
     if (incluirEsgoto) {
       valorTotal = (valorTotal * 2);
-      valorTotal += 10.18;
     }
     setState(() {
       valorGasto = valorTotal;
