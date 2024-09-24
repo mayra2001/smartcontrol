@@ -10,23 +10,28 @@ class GraficoPage extends StatefulWidget {
 class _GraficoPageState extends State<GraficoPage> {
   List<double> litrosGastos = [];
   List<double> tempoIrrigacao = [];
-  DateTime dataAtual = DateTime.now();
-  int diasSelecionados = 30;
-  double valorGasto = 0.0;
-  double litrosTotaisMes = 0.0;
+  List<double> umidadeAr = [];
+  List<double> temperatura = [];
+  List<double> umidadeSolo = [];
   int mesSelecionado = DateTime.now().month;
   bool incluirEsgoto = false;
+  double valorGasto = 0.0;
+  double litrosTotaisMes = 0.0;
+  int _chartKey = 0;
 
   @override
   void initState() {
     super.initState();
-    _carregarDados();
+    _carregarDados(mesSelecionado);
     _calcularValorGasto(mesSelecionado);
   }
 
-  Future<void> _carregarDados() async {
-    litrosGastos.clear();
-    tempoIrrigacao.clear();
+  Future<void> _carregarDados(int mes) async {
+    List<double> litrosPorDia = List.filled(31, 0);
+    List<double> tempoPorDia = List.filled(31, 0);
+    List<List<double>> umidadePorDia = List.generate(31, (_) => []);
+    List<List<double>> temperaturaPorDia = List.generate(31, (_) => []);
+    List<List<double>> umidadeSoloAtualizada = List.generate(31, (_) => []);
 
     QuerySnapshot snapshot =
         await FirebaseFirestore.instance.collection('dadosIrrigacao').get();
@@ -34,22 +39,47 @@ class _GraficoPageState extends State<GraficoPage> {
     for (var doc in snapshot.docs) {
       DateTime dataIrrigacao = DateTime.parse(doc.id);
 
-      if (_isDataDentroDoPeriodo(dataIrrigacao, diasSelecionados)) {
+      if (dataIrrigacao.month == mes) {
+        int dia = dataIrrigacao.day - 1; // Para indexar corretamente
         double litros = (doc['aguagasta'] is String)
             ? double.tryParse(doc['aguagasta']) ?? 0
             : (doc['aguagasta'] as double);
 
         double tempo = _converterTempoParaDouble(doc['tempoligado']);
-        litrosGastos.add(litros);
-        tempoIrrigacao.add(tempo);
+        double umidade = doc['umidade'] is String
+            ? double.tryParse(doc['umidade']) ?? 0
+            : doc['umidade'];
+        double temp = doc['temperatura'] is String
+            ? double.tryParse(doc['temperatura']) ?? 0
+            : doc['temperatura'];
+        double umidadeSoloValor = doc['umidadesolo'] is String
+            ? double.tryParse(doc['umidadesolo']) ?? 0
+            : doc['umidadesolo'];
+        litrosPorDia[dia] += litros;
+        tempoPorDia[dia] += tempo;
+        umidadeSoloAtualizada[dia].add(umidadeSoloValor);
+        umidadePorDia[dia].add(umidade);
+        temperaturaPorDia[dia].add(temp);
       }
     }
-    setState(() {});
-  }
 
-  bool _isDataDentroDoPeriodo(DateTime dataIrrigacao, int dias) {
-    DateTime dataLimite = dataAtual.subtract(Duration(days: dias));
-    return dataIrrigacao.isAfter(dataLimite);
+    setState(() {
+      litrosGastos = litrosPorDia;
+      tempoIrrigacao = tempoPorDia;
+      umidadeSolo = umidadeSoloAtualizada
+          .map((umidadesolo) =>
+              umidadesolo.isNotEmpty ? umidadesolo.first.toDouble() : 0.0)
+          .toList();
+      umidadeAr = umidadePorDia
+          .map((umidades) =>
+              umidades.isNotEmpty ? umidades.first.toDouble() : 0.0)
+          .toList();
+      temperatura = temperaturaPorDia
+          .map((temperaturas) =>
+              temperaturas.isNotEmpty ? temperaturas.first.toDouble() : 0.0)
+          .toList();
+      _chartKey++;
+    });
   }
 
   double _converterTempoParaDouble(String tempoString) {
@@ -112,30 +142,49 @@ class _GraficoPageState extends State<GraficoPage> {
     }
   }
 
+  double _calcularMaxY() {
+    double maxLitros = litrosGastos.isNotEmpty
+        ? litrosGastos.reduce((a, b) => a > b ? a : b)
+        : 0;
+    double maxTempo = tempoIrrigacao.isNotEmpty
+        ? tempoIrrigacao.reduce((a, b) => a > b ? a : b)
+        : 0;
+    double maxUmidade =
+        umidadeAr.isNotEmpty ? umidadeAr.reduce((a, b) => a > b ? a : b) : 0;
+    double maxTemperatura = temperatura.isNotEmpty
+        ? temperatura.reduce((a, b) => a > b ? a : b)
+        : 0;
+
+    // Retorna o maior valor de todos os datasets com uma margem
+    return [maxLitros, maxTempo, maxUmidade, maxTemperatura]
+            .reduce((a, b) => a > b ? a : b) *
+        1.2;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Gráficos de Irrigação'),
-        actions: [
-          PopupMenuButton<int>(
-            onSelected: (value) {
-              setState(() {
-                diasSelecionados = value;
-                _carregarDados();
-              });
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 7, child: Text('Últimos 7 dias')),
-              PopupMenuItem(value: 15, child: Text('Últimos 15 dias')),
-              PopupMenuItem(value: 30, child: Text('Últimos 30 dias')),
-            ],
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text('Gráficos de Irrigação')),
       body: SingleChildScrollView(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20.0),
+              child: Row(
+                children: [
+                  const Text('Incluir esgoto'),
+                  Checkbox(
+                    value: incluirEsgoto,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        incluirEsgoto = value!;
+                        _calcularValorGasto(mesSelecionado);
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -156,6 +205,7 @@ class _GraficoPageState extends State<GraficoPage> {
                     onChanged: (newMes) {
                       setState(() {
                         mesSelecionado = newMes!;
+                        _carregarDados(mesSelecionado);
                         _calcularValorGasto(mesSelecionado);
                       });
                     },
@@ -164,105 +214,113 @@ class _GraficoPageState extends State<GraficoPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Incluir esgoto: ',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Checkbox(
-                    value: incluirEsgoto,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        incluirEsgoto = value!;
-                        _calcularValorGasto(mesSelecionado);
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.all(8.0),
               child: Text(
                 'Litros gastos no mês selecionado: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.all(8.0),
               child: Text(
-                'Valor gasto no mês selecionado: R\$ ${valorGasto.toStringAsFixed(2)}',
+                'Valor total gasto: R\$${valorGasto.toStringAsFixed(2)}',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-            _buildChart('Litros Gastos', litrosGastos, Colors.blue),
-            _buildChart(
-                'Tempo de Irrigação (segundos)', tempoIrrigacao, Colors.red),
+            Container(
+              height: 300,
+              padding: const EdgeInsets.all(16.0),
+              child: LineChart(
+                key: ValueKey<int>(_chartKey),
+                LineChartData(
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          // Customize your bottom title (X-axis)
+                          return Text((value + 1).toInt().toString());
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          // Customize your left title (Y-axis)
+                          return Text(value.toInt().toString());
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(color: Colors.grey, width: 1),
+                  ),
+                  minX: 0,
+                  maxX: 30,
+                  minY: 0,
+                  maxY: _calcularMaxY(),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: List.generate(
+                        litrosGastos.length,
+                        (index) =>
+                            FlSpot(index.toDouble(), litrosGastos[index]),
+                      ),
+                      isCurved: true,
+                      barWidth: 2,
+                      color: Colors.blue,
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                    LineChartBarData(
+                      spots: List.generate(
+                        tempoIrrigacao.length,
+                        (index) =>
+                            FlSpot(index.toDouble(), tempoIrrigacao[index]),
+                      ),
+                      isCurved: true,
+                      barWidth: 2,
+                      color: Colors.green,
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                    LineChartBarData(
+                      spots: List.generate(
+                        umidadeAr.length,
+                        (index) => FlSpot(index.toDouble(), umidadeAr[index]),
+                      ),
+                      isCurved: true,
+                      barWidth: 2,
+                      color: Colors.purple,
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                    LineChartBarData(
+                      spots: List.generate(
+                        temperatura.length,
+                        (index) => FlSpot(index.toDouble(), temperatura[index]),
+                      ),
+                      isCurved: true,
+                      barWidth: 2,
+                      color: Colors.red,
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                    LineChartBarData(
+                      spots: List.generate(
+                        umidadeSolo.length,
+                        (index) => FlSpot(index.toDouble(), umidadeSolo[index]),
+                      ),
+                      isCurved: true,
+                      barWidth: 2,
+                      color: Colors.brown,
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildChart(String title, List<double> data, Color color) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            title,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-        Container(
-          height: 300,
-          child: LineChart(
-            LineChartData(
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: true, reservedSize: 40),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 38,
-                    getTitlesWidget: (value, meta) {
-                      return Text((value.toInt() + 1).toString());
-                    },
-                  ),
-                ),
-                topTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                rightTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-              ),
-              gridData: FlGridData(show: true),
-              borderData: FlBorderData(show: true),
-              minX: 0,
-              maxX: data.length.toDouble() - 1,
-              minY: 0,
-              maxY: data.isNotEmpty
-                  ? data.reduce((a, b) => a > b ? a : b) + 1
-                  : 1,
-              lineBarsData: [
-                LineChartBarData(
-                  spots: List.generate(data.length,
-                      (index) => FlSpot(index.toDouble(), data[index])),
-                  isCurved: true,
-                  barWidth: 3,
-                  color: color,
-                  belowBarData: BarAreaData(show: false),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
