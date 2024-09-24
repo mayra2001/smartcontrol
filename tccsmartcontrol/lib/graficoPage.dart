@@ -3,7 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class GraficoPage extends StatefulWidget {
+  const GraficoPage({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _GraficoPageState createState() => _GraficoPageState();
 }
 
@@ -18,6 +21,7 @@ class _GraficoPageState extends State<GraficoPage> {
   double valorGasto = 0.0;
   double litrosTotaisMes = 0.0;
   int _chartKey = 0;
+  String tempoTotalIrrigacao = "0 min 0 seg";
 
   @override
   void initState() {
@@ -40,7 +44,7 @@ class _GraficoPageState extends State<GraficoPage> {
       DateTime dataIrrigacao = DateTime.parse(doc.id);
 
       if (dataIrrigacao.month == mes) {
-        int dia = dataIrrigacao.day - 1; // Para indexar corretamente
+        int dia = dataIrrigacao.day - 1;
         double litros = (doc['aguagasta'] is String)
             ? double.tryParse(doc['aguagasta']) ?? 0
             : (doc['aguagasta'] as double);
@@ -80,6 +84,33 @@ class _GraficoPageState extends State<GraficoPage> {
           .toList();
       _chartKey++;
     });
+    tempoTotalIrrigacao = _somarTempos(tempoIrrigacao
+        .map((t) => '${(t ~/ 60)} min ${(t % 60).toInt()} seg')
+        .toList());
+  }
+
+  String _somarTempos(List<String> tempos) {
+    int totalSegundos = 0;
+
+    for (var tempo in tempos) {
+      final regex = RegExp(r'(\d+) min (\d+) seg');
+      final match = regex.firstMatch(tempo);
+      if (match != null) {
+        int minutos = int.parse(match.group(1) ?? '0');
+        int segundos = int.parse(match.group(2) ?? '0');
+        totalSegundos += minutos * 60 + segundos;
+      }
+    }
+    int totalHoras = totalSegundos ~/ 3600;
+    int totalMinutos = (totalSegundos % 3600) ~/ 60;
+    int restanteSegundos = totalSegundos % 60;
+    if (totalHoras > 0) {
+      return "$totalHoras h $totalMinutos min $restanteSegundos seg";
+    } else if (totalMinutos > 0) {
+      return "$totalMinutos min $restanteSegundos seg";
+    } else {
+      return "$restanteSegundos seg";
+    }
   }
 
   double _converterTempoParaDouble(String tempoString) {
@@ -146,17 +177,12 @@ class _GraficoPageState extends State<GraficoPage> {
     double maxLitros = litrosGastos.isNotEmpty
         ? litrosGastos.reduce((a, b) => a > b ? a : b)
         : 0;
-    double maxTempo = tempoIrrigacao.isNotEmpty
-        ? tempoIrrigacao.reduce((a, b) => a > b ? a : b)
-        : 0;
     double maxUmidade =
         umidadeAr.isNotEmpty ? umidadeAr.reduce((a, b) => a > b ? a : b) : 0;
     double maxTemperatura = temperatura.isNotEmpty
         ? temperatura.reduce((a, b) => a > b ? a : b)
         : 0;
-
-    // Retorna o maior valor de todos os datasets com uma margem
-    return [maxLitros, maxTempo, maxUmidade, maxTemperatura]
+    return [maxLitros, maxUmidade, maxTemperatura]
             .reduce((a, b) => a > b ? a : b) *
         1.2;
   }
@@ -164,33 +190,16 @@ class _GraficoPageState extends State<GraficoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Gráficos de Irrigação')),
+      appBar: AppBar(title: const Text('Gráficos de Irrigação')),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20.0),
-              child: Row(
-                children: [
-                  const Text('Incluir esgoto'),
-                  Checkbox(
-                    value: incluirEsgoto,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        incluirEsgoto = value!;
-                        _calcularValorGasto(mesSelecionado);
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     'Selecione o mês: ',
                     style: TextStyle(fontSize: 16),
                   ),
@@ -213,20 +222,6 @@ class _GraficoPageState extends State<GraficoPage> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Litros gastos no mês selecionado: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Valor total gasto: R\$${valorGasto.toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
             Container(
               height: 300,
               padding: const EdgeInsets.all(16.0),
@@ -234,20 +229,26 @@ class _GraficoPageState extends State<GraficoPage> {
                 key: ValueKey<int>(_chartKey),
                 LineChartData(
                   titlesData: FlTitlesData(
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: false,
+                        getTitlesWidget: (value, meta) {
+                          return Text((value + 1).toInt().toString());
+                        },
+                      ),
+                    ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          // Customize your bottom title (X-axis)
                           return Text((value + 1).toInt().toString());
                         },
                       ),
                     ),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
-                        showTitles: true,
+                        showTitles: false,
                         getTitlesWidget: (value, meta) {
-                          // Customize your left title (Y-axis)
                           return Text(value.toInt().toString());
                         },
                       ),
@@ -273,17 +274,17 @@ class _GraficoPageState extends State<GraficoPage> {
                       color: Colors.blue,
                       belowBarData: BarAreaData(show: false),
                     ),
-                    LineChartBarData(
-                      spots: List.generate(
-                        tempoIrrigacao.length,
-                        (index) =>
-                            FlSpot(index.toDouble(), tempoIrrigacao[index]),
-                      ),
-                      isCurved: true,
-                      barWidth: 2,
-                      color: Colors.green,
-                      belowBarData: BarAreaData(show: false),
-                    ),
+                    //LineChartBarData(
+                    // spots: List.generate(
+                    //   tempoIrrigacao.length,
+                    //   (index) =>
+                    //       FlSpot(index.toDouble(), tempoIrrigacao[index]),
+                    // ),
+                    // isCurved: true,
+                    //barWidth: 2,
+                    // color: Colors.green,
+                    //  belowBarData: BarAreaData(show: false),
+                    // ),
                     LineChartBarData(
                       spots: List.generate(
                         umidadeAr.length,
@@ -301,7 +302,7 @@ class _GraficoPageState extends State<GraficoPage> {
                       ),
                       isCurved: true,
                       barWidth: 2,
-                      color: Colors.red,
+                      color: Colors.green,
                       belowBarData: BarAreaData(show: false),
                     ),
                     LineChartBarData(
@@ -310,7 +311,7 @@ class _GraficoPageState extends State<GraficoPage> {
                         (index) => FlSpot(index.toDouble(), umidadeSolo[index]),
                       ),
                       isCurved: true,
-                      barWidth: 2,
+                      barWidth: 1,
                       color: Colors.brown,
                       belowBarData: BarAreaData(show: false),
                     ),
@@ -318,9 +319,88 @@ class _GraficoPageState extends State<GraficoPage> {
                 ),
               ),
             ),
+            const Padding(
+              padding: EdgeInsets.all(5.0),
+              child: Text(
+                'Legenda de dados por irrigação:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Column(
+                children: [
+                  _buildLegendItem(Colors.blue, 'Litros Gastos'),
+                  // _buildLegendItem(Colors.green, 'Tempo de Irrigação'),
+                  _buildLegendItem(Colors.purple, 'Umidade do Ar'),
+                  _buildLegendItem(Colors.green, 'Temperatura'),
+                  _buildLegendItem(Colors.brown, 'Umidade do Solo'),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Se em sua localidade é cobrado a taxa de esgoto, selecione para calcular o valor total de irrigação por mês.',
+                      softWrap: true,
+                    ),
+                  ),
+                  Checkbox(
+                    value: incluirEsgoto,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        incluirEsgoto = value!;
+                        _calcularValorGasto(mesSelecionado);
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Valor total gasto: R\$${valorGasto.toStringAsFixed(2)}',
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Litros gastos no mês selecionado: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Tempo total de irrigação no mês: $tempoTotalIrrigacao',
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 15,
+          height: 10,
+          color: color,
+        ),
+        const SizedBox(width: 10),
+        Text(label),
+      ],
     );
   }
 }

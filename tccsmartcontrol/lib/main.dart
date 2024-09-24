@@ -113,6 +113,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
         .show(0, title, body, notificationDetails, payload: 'item x');
   }
 
+  // ignore: unused_element
   Future<Map<String, String>> _fetchData() async {
     final estadoMotorSnapshot =
         await _databaseReference.child('dadosArduino/estadoMotor').once();
@@ -387,12 +388,12 @@ class _IrrigationAppState extends State<IrrigationApp> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.all(16),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.bar_chart, size: 40),
-                          const SizedBox(width: 10),
-                          const Text(
+                          Icon(Icons.bar_chart, size: 40),
+                          SizedBox(width: 10),
+                          Text(
                             'Gráficos',
                             style: TextStyle(fontSize: 20),
                           ),
@@ -412,6 +413,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // ignore: unused_local_variable
   const String vapidKey =
       "BNd0JzkSmt1D_vHBijj4GSNTSmAdTEbs4cTtX4Ycw0GxtuI-BxcKgH2fjYTwm63tqc7vnc9mLRWWQCKpFjEFXd8";
 
