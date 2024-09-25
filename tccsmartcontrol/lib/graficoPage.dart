@@ -22,6 +22,10 @@ class _GraficoPageState extends State<GraficoPage> {
   double litrosTotaisMes = 0.0;
   int _chartKey = 0;
   String tempoTotalIrrigacao = "0 min 0 seg";
+  bool showLitros = true;
+  bool showUmidadeAr = true;
+  bool showTemperatura = true;
+  bool showUmidadeSolo = true;
 
   @override
   void initState() {
@@ -87,6 +91,76 @@ class _GraficoPageState extends State<GraficoPage> {
     tempoTotalIrrigacao = _somarTempos(tempoIrrigacao
         .map((t) => '${(t ~/ 60)} min ${(t % 60).toInt()} seg')
         .toList());
+  }
+
+  List<LineChartBarData> _construirLineBarsData() {
+    List<LineChartBarData> lineBars = [];
+
+    if (showLitros) {
+      lineBars.add(
+        LineChartBarData(
+          spots: List.generate(
+            litrosGastos.length,
+            (index) => FlSpot(index.toDouble(), litrosGastos[index]),
+          ),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.blue,
+          belowBarData: BarAreaData(show: false),
+          dotData: const FlDotData(show: false),
+        ),
+      );
+    }
+
+    if (showUmidadeAr) {
+      lineBars.add(
+        LineChartBarData(
+          spots: List.generate(
+            umidadeAr.length,
+            (index) => FlSpot(index.toDouble(), umidadeAr[index]),
+          ),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.purple,
+          belowBarData: BarAreaData(show: false),
+          dotData: const FlDotData(show: false),
+        ),
+      );
+    }
+
+    if (showTemperatura) {
+      lineBars.add(
+        LineChartBarData(
+          spots: List.generate(
+            temperatura.length,
+            (index) => FlSpot(index.toDouble(), temperatura[index]),
+          ),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.green,
+          belowBarData: BarAreaData(show: false),
+          dotData: const FlDotData(show: false),
+        ),
+      );
+    }
+
+    if (showUmidadeSolo) {
+      lineBars.add(
+        LineChartBarData(
+          spots: List.generate(
+            umidadeSolo.length,
+            (index) => FlSpot(index.toDouble(), umidadeSolo[index]),
+          ),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.brown,
+          belowBarData: BarAreaData(show: false),
+          dotData: const FlDotData(show: false),
+        ),
+      );
+    }
+
+    return lineBars;
   }
 
   String _somarTempos(List<String> tempos) {
@@ -195,13 +269,13 @@ class _GraficoPageState extends State<GraficoPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.only(right: 120.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
                     'Selecione o mês: ',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 15),
                   ),
                   DropdownButton<int>(
                     value: mesSelecionado,
@@ -223,7 +297,7 @@ class _GraficoPageState extends State<GraficoPage> {
               ),
             ),
             Container(
-              height: 300,
+              height: 280,
               padding: const EdgeInsets.all(16.0),
               child: LineChart(
                 key: ValueKey<int>(_chartKey),
@@ -262,84 +336,54 @@ class _GraficoPageState extends State<GraficoPage> {
                   maxX: 30,
                   minY: 0,
                   maxY: _calcularMaxY(),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: List.generate(
-                        litrosGastos.length,
-                        (index) =>
-                            FlSpot(index.toDouble(), litrosGastos[index]),
-                      ),
-                      isCurved: true,
-                      barWidth: 2,
-                      color: Colors.blue,
-                      belowBarData: BarAreaData(show: false),
-                    ),
-                    //LineChartBarData(
-                    // spots: List.generate(
-                    //   tempoIrrigacao.length,
-                    //   (index) =>
-                    //       FlSpot(index.toDouble(), tempoIrrigacao[index]),
-                    // ),
-                    // isCurved: true,
-                    //barWidth: 2,
-                    // color: Colors.green,
-                    //  belowBarData: BarAreaData(show: false),
-                    // ),
-                    LineChartBarData(
-                      spots: List.generate(
-                        umidadeAr.length,
-                        (index) => FlSpot(index.toDouble(), umidadeAr[index]),
-                      ),
-                      isCurved: true,
-                      barWidth: 2,
-                      color: Colors.purple,
-                      belowBarData: BarAreaData(show: false),
-                    ),
-                    LineChartBarData(
-                      spots: List.generate(
-                        temperatura.length,
-                        (index) => FlSpot(index.toDouble(), temperatura[index]),
-                      ),
-                      isCurved: true,
-                      barWidth: 2,
-                      color: Colors.green,
-                      belowBarData: BarAreaData(show: false),
-                    ),
-                    LineChartBarData(
-                      spots: List.generate(
-                        umidadeSolo.length,
-                        (index) => FlSpot(index.toDouble(), umidadeSolo[index]),
-                      ),
-                      isCurved: true,
-                      barWidth: 1,
-                      color: Colors.brown,
-                      belowBarData: BarAreaData(show: false),
-                    ),
-                  ],
+                  lineBarsData: _construirLineBarsData(),
                 ),
               ),
             ),
             const Padding(
-              padding: EdgeInsets.all(5.0),
+              padding: const EdgeInsets.only(right: 110.0),
               child: Text(
-                'Legenda de dados por irrigação:',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                'Selecionar dados a serem exibidos:',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(5.0),
+              padding: const EdgeInsets.only(top: 1.0),
               child: Column(
                 children: [
-                  _buildLegendItem(Colors.blue, 'Litros Gastos'),
-                  // _buildLegendItem(Colors.green, 'Tempo de Irrigação'),
-                  _buildLegendItem(Colors.purple, 'Umidade do Ar'),
-                  _buildLegendItem(Colors.green, 'Temperatura'),
-                  _buildLegendItem(Colors.brown, 'Umidade do Solo'),
+                  _buildCheckbox('Litros Gastos', Colors.blue, showLitros,
+                      (val) {
+                    setState(() {
+                      showLitros = val!;
+                      _chartKey++;
+                    });
+                  }),
+                  _buildCheckbox('Umidade do Ar', Colors.purple, showUmidadeAr,
+                      (val) {
+                    setState(() {
+                      showUmidadeAr = val!;
+                      _chartKey++;
+                    });
+                  }),
+                  _buildCheckbox('Temperatura', Colors.green, showTemperatura,
+                      (val) {
+                    setState(() {
+                      showTemperatura = val!;
+                      _chartKey++;
+                    });
+                  }),
+                  _buildCheckbox(
+                      'Umidade do Solo', Colors.brown, showUmidadeSolo, (val) {
+                    setState(() {
+                      showUmidadeSolo = val!;
+                      _chartKey++;
+                    });
+                  }),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(10.0),
+              padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
                   const Expanded(
@@ -361,7 +405,7 @@ class _GraficoPageState extends State<GraficoPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.only(right: 180.0),
               child: Text(
                 'Valor total gasto: R\$${valorGasto.toStringAsFixed(2)}',
                 style:
@@ -369,7 +413,7 @@ class _GraficoPageState extends State<GraficoPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.only(right: 50.0),
               child: Text(
                 'Litros gastos no mês selecionado: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
                 style:
@@ -377,7 +421,7 @@ class _GraficoPageState extends State<GraficoPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.only(right: 90.0),
               child: Text(
                 'Tempo total de irrigação no mês: $tempoTotalIrrigacao',
                 style:
@@ -390,15 +434,16 @@ class _GraficoPageState extends State<GraficoPage> {
     );
   }
 
-  Widget _buildLegendItem(Color color, String label) {
+  Widget _buildCheckbox(
+      String label, Color color, bool value, Function(bool?)? onChanged) {
     return Row(
       children: [
-        Container(
-          width: 15,
-          height: 10,
-          color: color,
+        Checkbox(
+          value: value,
+          onChanged: onChanged,
+          checkColor: Colors.white,
+          activeColor: color,
         ),
-        const SizedBox(width: 10),
         Text(label),
       ],
     );
