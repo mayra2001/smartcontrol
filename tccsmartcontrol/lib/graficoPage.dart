@@ -341,7 +341,7 @@ class _GraficoPageState extends State<GraficoPage> {
               ),
             ),
             const Padding(
-              padding: const EdgeInsets.only(right: 110.0),
+              padding: EdgeInsets.only(right: 110.0),
               child: Text(
                 'Selecionar dados a serem exibidos:',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -421,7 +421,7 @@ class _GraficoPageState extends State<GraficoPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(right: 90.0),
+              padding: const EdgeInsets.only(left: 11.0, right: 110.0),
               child: Text(
                 'Tempo total de irrigação no mês: $tempoTotalIrrigacao',
                 style:
