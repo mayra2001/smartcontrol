@@ -379,7 +379,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => GraficoPage()),
+                        MaterialPageRoute(
+                            builder: (context) => const GraficoPage()),
                       );
                     },
                     child: Container(
@@ -394,7 +395,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
                           Icon(Icons.bar_chart, size: 40),
                           SizedBox(width: 10),
                           Text(
-                            'Gráficos',
+                            'Dados de Irrigação',
                             style: TextStyle(fontSize: 20),
                           ),
                         ],

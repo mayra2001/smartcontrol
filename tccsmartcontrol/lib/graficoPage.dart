@@ -16,6 +16,7 @@ class _GraficoPageState extends State<GraficoPage> {
   List<double> umidadeAr = [];
   List<double> temperatura = [];
   List<double> umidadeSolo = [];
+  List<double> litrosGastosPorMes = List.filled(12, 0);
   int mesSelecionado = DateTime.now().month;
   bool incluirEsgoto = false;
   double valorGasto = 0.0;
@@ -32,6 +33,7 @@ class _GraficoPageState extends State<GraficoPage> {
     super.initState();
     _carregarDados(mesSelecionado);
     _calcularValorGasto(mesSelecionado);
+    _carregarDadosAno();
   }
 
   Future<void> _carregarDados(int mes) async {
@@ -91,6 +93,36 @@ class _GraficoPageState extends State<GraficoPage> {
     tempoTotalIrrigacao = _somarTempos(tempoIrrigacao
         .map((t) => '${(t ~/ 60)} min ${(t % 60).toInt()} seg')
         .toList());
+  }
+
+  Future<void> _carregarDadosAno() async {
+    List<double> litrosPorMes = List.filled(12, 0);
+
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('dadosIrrigacao').get();
+
+    for (var doc in snapshot.docs) {
+      DateTime dataIrrigacao = DateTime.parse(doc.id);
+
+      int mes = dataIrrigacao.month - 1;
+      double litros = (doc['aguagasta'] is String)
+          ? double.tryParse(doc['aguagasta']) ?? 0
+          : (doc['aguagasta'] as double);
+
+      litrosPorMes[mes] += litros;
+    }
+
+    setState(() {
+      litrosGastosPorMes = litrosPorMes;
+    });
+  }
+
+  double _calcularMaxYconsumo() {
+    double maxLitros = litrosGastosPorMes.isNotEmpty
+        ? litrosGastosPorMes.reduce((a, b) => a > b ? a : b)
+        : 0;
+    double max = maxLitros / 1000;
+    return max * 1.19;
   }
 
   List<LineChartBarData> _construirLineBarsData() {
@@ -261,10 +293,25 @@ class _GraficoPageState extends State<GraficoPage> {
         1.2;
   }
 
+  Widget _buildCheckbox(
+      String label, Color color, bool value, Function(bool?)? onChanged) {
+    return Row(
+      children: [
+        Checkbox(
+          value: value,
+          onChanged: onChanged,
+          checkColor: Colors.white,
+          activeColor: color,
+        ),
+        Text(label),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Gráficos de Irrigação')),
+      appBar: AppBar(title: const Text('Controle de Dados')),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -296,137 +343,242 @@ class _GraficoPageState extends State<GraficoPage> {
                 ],
               ),
             ),
-            Container(
-              height: 280,
-              padding: const EdgeInsets.all(16.0),
-              child: LineChart(
-                key: ValueKey<int>(_chartKey),
-                LineChartData(
-                  titlesData: FlTitlesData(
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: false,
-                        getTitlesWidget: (value, meta) {
-                          return Text((value + 1).toInt().toString());
-                        },
+            ExpansionTile(
+              title: const Text('Grafico dos dados de irrigação'),
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      height: 280,
+                      padding: const EdgeInsets.all(16.0),
+                      child: LineChart(
+                        key: ValueKey<int>(_chartKey),
+                        LineChartData(
+                          titlesData: FlTitlesData(
+                            topTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: false,
+                                getTitlesWidget: (value, meta) {
+                                  return Text((value + 1).toInt().toString());
+                                },
+                              ),
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  return Text((value + 1).toInt().toString());
+                                },
+                              ),
+                            ),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: false,
+                                getTitlesWidget: (value, meta) {
+                                  return Text(value.toInt().toString());
+                                },
+                              ),
+                            ),
+                          ),
+                          borderData: FlBorderData(
+                            show: true,
+                            border: Border.all(color: Colors.grey, width: 1),
+                          ),
+                          minX: 0,
+                          maxX: 30,
+                          minY: 0,
+                          maxY: _calcularMaxY(),
+                          lineBarsData: _construirLineBarsData(),
+                        ),
                       ),
                     ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          return Text((value + 1).toInt().toString());
-                        },
-                      ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Selecionar dados a serem exibidos:',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: false,
-                        getTitlesWidget: (value, meta) {
-                          return Text(value.toInt().toString());
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(
-                    show: true,
-                    border: Border.all(color: Colors.grey, width: 1),
-                  ),
-                  minX: 0,
-                  maxX: 30,
-                  minY: 0,
-                  maxY: _calcularMaxY(),
-                  lineBarsData: _construirLineBarsData(),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(right: 110.0),
-              child: Text(
-                'Selecionar dados a serem exibidos:',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 1.0),
-              child: Column(
-                children: [
-                  _buildCheckbox('Litros Gastos', Colors.blue, showLitros,
-                      (val) {
-                    setState(() {
-                      showLitros = val!;
-                      _chartKey++;
-                    });
-                  }),
-                  _buildCheckbox('Umidade do Ar', Colors.purple, showUmidadeAr,
-                      (val) {
-                    setState(() {
-                      showUmidadeAr = val!;
-                      _chartKey++;
-                    });
-                  }),
-                  _buildCheckbox('Temperatura', Colors.green, showTemperatura,
-                      (val) {
-                    setState(() {
-                      showTemperatura = val!;
-                      _chartKey++;
-                    });
-                  }),
-                  _buildCheckbox(
-                      'Umidade do Solo', Colors.brown, showUmidadeSolo, (val) {
-                    setState(() {
-                      showUmidadeSolo = val!;
-                      _chartKey++;
-                    });
-                  }),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Se em sua localidade é cobrado a taxa de esgoto, selecione para calcular o valor total de irrigação por mês.',
-                      softWrap: true,
-                    ),
-                  ),
-                  Checkbox(
-                    value: incluirEsgoto,
-                    onChanged: (bool? value) {
+                    _buildCheckbox('Litros Gastos', Colors.blue, showLitros,
+                        (val) {
                       setState(() {
-                        incluirEsgoto = value!;
-                        _calcularValorGasto(mesSelecionado);
+                        showLitros = val!;
+                        _chartKey++;
                       });
-                    },
+                    }),
+                    _buildCheckbox(
+                        'Umidade do Ar', Colors.purple, showUmidadeAr, (val) {
+                      setState(() {
+                        showUmidadeAr = val!;
+                        _chartKey++;
+                      });
+                    }),
+                    _buildCheckbox('Temperatura', Colors.green, showTemperatura,
+                        (val) {
+                      setState(() {
+                        showTemperatura = val!;
+                        _chartKey++;
+                      });
+                    }),
+                    _buildCheckbox(
+                        'Umidade do Solo', Colors.brown, showUmidadeSolo,
+                        (val) {
+                      setState(() {
+                        showUmidadeSolo = val!;
+                        _chartKey++;
+                      });
+                    }),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ExpansionTile(
+              title: const Text('Consumo mensal'),
+              children: [
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Se em sua localidade é cobrado a taxa de esgoto, selecione para calcular o valor total de irrigação por mês.',
+                              softWrap: true,
+                            ),
+                          ),
+                          Checkbox(
+                            value: incluirEsgoto,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                incluirEsgoto = value!;
+                                _calcularValorGasto(mesSelecionado);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 180.0),
+                      child: Text(
+                        'Valor total gasto: R\$${valorGasto.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 50.0),
+                      child: Text(
+                        'Litros gastos no mês selecionado: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 11.0, right: 110.0),
+                      child: Text(
+                        'Tempo total de irrigação no mês: $tempoTotalIrrigacao',
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 280,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: LineChart(
+                      LineChartData(
+                        gridData: FlGridData(
+                          show: true,
+                        ),
+                        titlesData: FlTitlesData(
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                const style = TextStyle(
+                                  color: Color(0xff68737d),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                );
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  space: 8.0,
+                                  child: Text(
+                                    _mesString(value.toInt()),
+                                    style: style,
+                                  ),
+                                );
+                              },
+                              interval: 1,
+                            ),
+                          ),
+                          topTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: false,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: const TextStyle(
+                                    color: Color(0xff67727d),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                );
+                              },
+                              reservedSize: 28,
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: false,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: const TextStyle(
+                                    color: Color(0xff67727d),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                );
+                              },
+                              reservedSize: 28,
+                            ),
+                          ),
+                        ),
+                        borderData: FlBorderData(
+                          show: true,
+                          border: Border.all(
+                            color: const Color(0xff37434d),
+                            width: 1,
+                          ),
+                        ),
+                        minX: 0,
+                        maxX: 11,
+                        minY: 0,
+                        maxY: _calcularMaxYconsumo(),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: List.generate(
+                              litrosGastosPorMes.length,
+                              (index) => FlSpot(index.toDouble(),
+                                  litrosGastosPorMes[index] / 1000),
+                            ),
+                            isCurved: true,
+                            color: Colors.blue,
+                            barWidth: 2,
+                            belowBarData: BarAreaData(show: false),
+                            dotData: const FlDotData(show: false),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 180.0),
-              child: Text(
-                'Valor total gasto: R\$${valorGasto.toStringAsFixed(2)}',
-                style:
-                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 50.0),
-              child: Text(
-                'Litros gastos no mês selecionado: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
-                style:
-                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 11.0, right: 110.0),
-              child: Text(
-                'Tempo total de irrigação no mês: $tempoTotalIrrigacao',
-                style:
-                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
+                ),
+              ],
             ),
           ],
         ),
@@ -434,18 +586,21 @@ class _GraficoPageState extends State<GraficoPage> {
     );
   }
 
-  Widget _buildCheckbox(
-      String label, Color color, bool value, Function(bool?)? onChanged) {
-    return Row(
-      children: [
-        Checkbox(
-          value: value,
-          onChanged: onChanged,
-          checkColor: Colors.white,
-          activeColor: color,
-        ),
-        Text(label),
-      ],
-    );
+  String _mesString(int mesIndex) {
+    const meses = [
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez'
+    ];
+    return meses[mesIndex];
   }
 }
