@@ -135,7 +135,7 @@ class _GraficoPageState extends State<GraficoPage> {
             litrosGastos.length,
             (index) => FlSpot(index.toDouble(), litrosGastos[index]),
           ),
-          isCurved: false,
+          isCurved: true,
           barWidth: 2,
           color: Colors.blue,
           belowBarData: BarAreaData(show: false),
@@ -151,7 +151,7 @@ class _GraficoPageState extends State<GraficoPage> {
             umidadeAr.length,
             (index) => FlSpot(index.toDouble(), umidadeAr[index]),
           ),
-          isCurved: false,
+          isCurved: true,
           barWidth: 2,
           color: Colors.purple,
           belowBarData: BarAreaData(show: false),
@@ -167,7 +167,7 @@ class _GraficoPageState extends State<GraficoPage> {
             temperatura.length,
             (index) => FlSpot(index.toDouble(), temperatura[index]),
           ),
-          isCurved: false,
+          isCurved: true,
           barWidth: 2,
           color: Colors.green,
           belowBarData: BarAreaData(show: false),
@@ -183,7 +183,7 @@ class _GraficoPageState extends State<GraficoPage> {
             umidadeSolo.length,
             (index) => FlSpot(index.toDouble(), umidadeSolo[index]),
           ),
-          isCurved: false,
+          isCurved: true,
           barWidth: 2,
           color: Colors.brown,
           belowBarData: BarAreaData(show: false),
@@ -294,7 +294,8 @@ class _GraficoPageState extends State<GraficoPage> {
   }
 
   Widget _buildCheckbox(
-      String label, Color color, bool value, Function(bool?)? onChanged) {
+      String label, Color color, bool value, Function(bool?)? onChanged,
+      {required TextStyle style}) {
     return Row(
       children: [
         Checkbox(
@@ -303,7 +304,7 @@ class _GraficoPageState extends State<GraficoPage> {
           checkColor: Colors.white,
           activeColor: color,
         ),
-        Text(label),
+        Text(label, style: const TextStyle(color: Colors.white)),
       ],
     );
   }
@@ -311,7 +312,12 @@ class _GraficoPageState extends State<GraficoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Controle de Dados')),
+      backgroundColor: Colors.grey[800],
+      appBar: AppBar(
+        title: const Text('Controle de Dados',
+            softWrap: true, style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.grey[850],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -320,21 +326,31 @@ class _GraficoPageState extends State<GraficoPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Selecione o mês: ',
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  DropdownButton<int>(
-                    value: mesSelecionado,
-                    items: List.generate(12, (index) {
-                      return DropdownMenuItem(
-                        value: index + 1,
-                        child: Text('Mês ${index + 1}'),
-                      );
-                    }),
-                    onChanged: (newMes) {
+                  IconButton(
+                    icon: const Icon(Icons.arrow_left, color: Colors.white),
+                    onPressed: () {
                       setState(() {
-                        mesSelecionado = newMes!;
+                        mesSelecionado =
+                            mesSelecionado > 1 ? mesSelecionado - 1 : 12;
+                        _carregarDados(mesSelecionado);
+                        _calcularValorGasto(mesSelecionado);
+                      });
+                    },
+                  ),
+                  Text(
+                    'Mês $mesSelecionado',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_right, color: Colors.white),
+                    onPressed: () {
+                      setState(() {
+                        mesSelecionado =
+                            mesSelecionado < 12 ? mesSelecionado + 1 : 1;
                         _carregarDados(mesSelecionado);
                         _calcularValorGasto(mesSelecionado);
                       });
@@ -344,13 +360,14 @@ class _GraficoPageState extends State<GraficoPage> {
               ),
             ),
             ExpansionTile(
-              title: const Text('Grafico dos dados de irrigação'),
+              title: const Text('Grafico dos dados de irrigação',
+                  style: TextStyle(color: Colors.white)),
               children: [
                 Column(
                   children: [
                     Container(
                       height: 280,
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(19.0),
                       child: LineChart(
                         key: ValueKey<int>(_chartKey),
                         LineChartData(
@@ -359,7 +376,10 @@ class _GraficoPageState extends State<GraficoPage> {
                               sideTitles: SideTitles(
                                 showTitles: false,
                                 getTitlesWidget: (value, meta) {
-                                  return Text((value + 1).toInt().toString());
+                                  return Text(
+                                    (value + 1).toInt().toString(),
+                                    style: const TextStyle(color: Colors.white),
+                                  );
                                 },
                               ),
                             ),
@@ -367,7 +387,10 @@ class _GraficoPageState extends State<GraficoPage> {
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 getTitlesWidget: (value, meta) {
-                                  return Text((value + 1).toInt().toString());
+                                  return Text(
+                                    (value + 1).toInt().toString(),
+                                    style: const TextStyle(color: Colors.white),
+                                  );
                                 },
                               ),
                             ),
@@ -375,7 +398,21 @@ class _GraficoPageState extends State<GraficoPage> {
                               sideTitles: SideTitles(
                                 showTitles: false,
                                 getTitlesWidget: (value, meta) {
-                                  return Text(value.toInt().toString());
+                                  return Text(
+                                    value.toInt().toString(),
+                                    style: const TextStyle(color: Colors.white),
+                                  );
+                                },
+                              ),
+                            ),
+                            rightTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  return Text(
+                                    value.toInt().toString(),
+                                    style: const TextStyle(color: Colors.white),
+                                  );
                                 },
                               ),
                             ),
@@ -395,25 +432,28 @@ class _GraficoPageState extends State<GraficoPage> {
                     const SizedBox(height: 16),
                     const Text(
                       'Selecionar dados a serem exibidos:',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     ),
                     _buildCheckbox('Litros Gastos', Colors.blue, showLitros,
-                        (val) {
+                        style: const TextStyle(color: Colors.white), (val) {
                       setState(() {
                         showLitros = val!;
                         _chartKey++;
                       });
                     }),
                     _buildCheckbox(
-                        'Umidade do Ar', Colors.purple, showUmidadeAr, (val) {
+                        'Umidade do Ar', Colors.purple, showUmidadeAr,
+                        style: const TextStyle(color: Colors.white), (val) {
                       setState(() {
                         showUmidadeAr = val!;
                         _chartKey++;
                       });
                     }),
                     _buildCheckbox('Temperatura', Colors.green, showTemperatura,
-                        (val) {
+                        style: const TextStyle(color: Colors.white), (val) {
                       setState(() {
                         showTemperatura = val!;
                         _chartKey++;
@@ -421,7 +461,7 @@ class _GraficoPageState extends State<GraficoPage> {
                     }),
                     _buildCheckbox(
                         'Umidade do Solo', Colors.brown, showUmidadeSolo,
-                        (val) {
+                        style: const TextStyle(color: Colors.white), (val) {
                       setState(() {
                         showUmidadeSolo = val!;
                         _chartKey++;
@@ -433,7 +473,8 @@ class _GraficoPageState extends State<GraficoPage> {
             ),
             const SizedBox(height: 16),
             ExpansionTile(
-              title: const Text('Consumo mensal'),
+              title: const Text('Consumo de Agua',
+                  style: TextStyle(color: Colors.white)),
               children: [
                 Column(
                   children: [
@@ -443,9 +484,9 @@ class _GraficoPageState extends State<GraficoPage> {
                         children: [
                           const Expanded(
                             child: Text(
-                              'Se em sua localidade é cobrado a taxa de esgoto, selecione para calcular o valor total de irrigação por mês.',
-                              softWrap: true,
-                            ),
+                                'Se em sua localidade é cobrado a taxa de esgoto, selecione para calcular o valor total de irrigação por mês.',
+                                softWrap: true,
+                                style: TextStyle(color: Colors.white)),
                           ),
                           Checkbox(
                             value: incluirEsgoto,
@@ -464,26 +505,42 @@ class _GraficoPageState extends State<GraficoPage> {
                       child: Text(
                         'Valor total gasto: R\$${valorGasto.toStringAsFixed(2)}',
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(right: 50.0),
+                      padding: const EdgeInsets.only(right: 60.0),
                       child: Text(
                         'Litros gastos no mês selecionado: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 11.0, right: 110.0),
+                      padding: const EdgeInsets.only(left: 17.0, right: 110.0),
                       child: Text(
                         'Tempo total de irrigação no mês: $tempoTotalIrrigacao',
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
                     ),
                   ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 20.0),
+                  child: Text(
+                    'Consumo anual em metros cúbicos ',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
                 ),
                 SizedBox(
                   height: 280,
@@ -500,7 +557,7 @@ class _GraficoPageState extends State<GraficoPage> {
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
                                 const style = TextStyle(
-                                  color: Color(0xff68737d),
+                                  color: Color.fromARGB(255, 175, 176, 177),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
                                 );
@@ -523,7 +580,23 @@ class _GraficoPageState extends State<GraficoPage> {
                                 return Text(
                                   value.toInt().toString(),
                                   style: const TextStyle(
-                                    color: Color(0xff67727d),
+                                    color: Color.fromARGB(255, 175, 176, 177),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                );
+                              },
+                              reservedSize: 28,
+                            ),
+                          ),
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 175, 176, 177),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                   ),
@@ -539,7 +612,7 @@ class _GraficoPageState extends State<GraficoPage> {
                                 return Text(
                                   value.toInt().toString(),
                                   style: const TextStyle(
-                                    color: Color(0xff67727d),
+                                    color: Color.fromARGB(255, 175, 176, 177),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                   ),
@@ -552,7 +625,7 @@ class _GraficoPageState extends State<GraficoPage> {
                         borderData: FlBorderData(
                           show: true,
                           border: Border.all(
-                            color: const Color(0xff37434d),
+                            color: Color.fromARGB(255, 175, 176, 177),
                             width: 1,
                           ),
                         ),
