@@ -20,7 +20,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
   final String userPassword = "xsara01";
   late User? user;
   bool modoAutomatico = false;
-  bool motorLigado = false;
+  bool paradaEmergencial = false;
   List<String> irrigacaoIds = [];
   final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref();
 
@@ -343,16 +343,25 @@ class _IrrigationAppState extends State<IrrigationApp> {
                         children: <Widget>[
                           ElevatedButton(
                             onPressed: () {
-                              _databaseReference
-                                  .child('comandos/motorLigado')
-                                  .set(false);
                               setState(() {
-                                motorLigado = false;
+                                paradaEmergencial = !paradaEmergencial;
+                                _databaseReference
+                                    .child('comandos/paradaEmergencial')
+                                    .set(paradaEmergencial);
+                                if (paradaEmergencial == true) {
+                                  modoAutomatico = false;
+                                  _databaseReference
+                                      .child('comandos/modoAutomatico')
+                                      .set(modoAutomatico);
+                                }
                               });
                             },
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red),
-                            child: const Text('Parada de Emergência'),
+                                backgroundColor: paradaEmergencial
+                                    ? Colors.green
+                                    : Colors.red),
+                            child: Text(
+                                'Parada de Emergêncial: ${paradaEmergencial ? 'Ligada' : 'Desligado'}'),
                           ),
                         ],
                       ),
@@ -366,6 +375,12 @@ class _IrrigationAppState extends State<IrrigationApp> {
                         _databaseReference
                             .child('comandos/modoAutomatico')
                             .set(modoAutomatico);
+                        if (modoAutomatico == true) {
+                          paradaEmergencial = false;
+                          _databaseReference
+                              .child('comandos/paradaEmergencial')
+                              .set(paradaEmergencial);
+                        }
                       });
                     },
                     child: Text(
