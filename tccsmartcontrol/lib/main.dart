@@ -271,6 +271,33 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             }
                           },
                         ),
+                        const SizedBox(height: 8),
+                        FutureBuilder(
+                          future:
+                              Future.delayed(const Duration(milliseconds: 500))
+                                  .then((value) {
+                            return _databaseReference
+                                .child('dadosArduino/nivel')
+                                .once();
+                          }),
+                          builder:
+                              (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Text('Carregando...',
+                                  style: TextStyle(fontSize: 20));
+                            } else if (snapshot.hasError) {
+                              return Text('Erro: ${snapshot.error}');
+                            } else {
+                              String nivel =
+                                  snapshot.data?.snapshot.value as String;
+                              return Text(
+                                'Nível reservatório: $nivel',
+                                style: const TextStyle(fontSize: 20),
+                              );
+                            }
+                          },
+                        ),
                         const SizedBox(height: 16),
                         const Text(
                           'Dados da última irrigação',
@@ -279,7 +306,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
                         const SizedBox(height: 8),
                         FutureBuilder(
                           future:
-                              Future.delayed(const Duration(milliseconds: 500))
+                              Future.delayed(const Duration(milliseconds: 550))
                                   .then((value) {
                             return _databaseReference
                                 .child('dadosArduino/tempoLigado')
@@ -306,7 +333,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
                         const SizedBox(height: 8),
                         FutureBuilder(
                           future:
-                              Future.delayed(const Duration(milliseconds: 550))
+                              Future.delayed(const Duration(milliseconds: 600))
                                   .then((value) {
                             return _databaseReference
                                 .child('dadosArduino/aguaGasta')
