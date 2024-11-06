@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:tccsmartcontrol/ConfiguracoesPage.dart';
 import 'package:tccsmartcontrol/firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,6 +24,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
   late User? user;
   bool modoAutomatico = false;
   bool paradaEmergencial = false;
+
   List<String> irrigacaoIds = [];
   final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref();
 
@@ -143,8 +147,19 @@ class _IrrigationAppState extends State<IrrigationApp> {
     return Scaffold(
         appBar: AppBar(
           title: const Text('Irrigação Automática'),
+          leading: Builder(
+            builder: (context) {
+              return IconButton(
+                icon: Icon(Icons.menu),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              );
+            },
+          ),
           backgroundColor: Colors.green,
         ),
+        drawer: _buildDrawer(),
         body: RefreshIndicator(
           key: _refreshIndicatorKey,
           onRefresh: _updateDataFromFirebase,
@@ -362,61 +377,6 @@ class _IrrigationAppState extends State<IrrigationApp> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ExpansionTile(
-                    title: const Text('Operação Manual'),
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                paradaEmergencial = !paradaEmergencial;
-                                _databaseReference
-                                    .child('comandos/paradaEmergencial')
-                                    .set(paradaEmergencial);
-                                if (paradaEmergencial == true) {
-                                  modoAutomatico = false;
-                                  _databaseReference
-                                      .child('comandos/modoAutomatico')
-                                      .set(modoAutomatico);
-                                }
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: paradaEmergencial
-                                    ? Colors.green
-                                    : Colors.red),
-                            child: Text(
-                                'Parada de Emergêncial: ${paradaEmergencial ? 'Ligada' : 'Desligado'}'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        modoAutomatico = !modoAutomatico;
-                        _databaseReference
-                            .child('comandos/modoAutomatico')
-                            .set(modoAutomatico);
-                        if (modoAutomatico == true) {
-                          paradaEmergencial = false;
-                          _databaseReference
-                              .child('comandos/paradaEmergencial')
-                              .set(paradaEmergencial);
-                        }
-                      });
-                    },
-                    child: Text(
-                      modoAutomatico
-                          ? 'Modo Automático: Ligado'
-                          : 'Modo Automático: Desligado',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -449,6 +409,101 @@ class _IrrigationAppState extends State<IrrigationApp> {
             },
           ),
         ));
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          const DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.green,
+            ),
+            child: Text(
+              'Menu',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+              ),
+            ),
+          ),
+          ExpansionTile(
+            title: const Text('Parada emergencial!'),
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.info),
+                title: const Text('Parada Emergêncial'),
+                trailing: Switch(
+                  value: paradaEmergencial,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      paradaEmergencial = !paradaEmergencial;
+                      _databaseReference
+                          .child('comandos/paradaEmergencial')
+                          .set(paradaEmergencial);
+                      if (paradaEmergencial == true) {
+                        modoAutomatico = false;
+                        _databaseReference
+                            .child('comandos/modoAutomatico')
+                            .set(modoAutomatico);
+                      }
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          ListTile(
+            leading: Icon(Icons.info),
+            title: const Text('Modo Automático'),
+            trailing: Switch(
+              value: modoAutomatico,
+              onChanged: (bool? value) {
+                setState(() {
+                  modoAutomatico = !modoAutomatico;
+                  _databaseReference
+                      .child('comandos/modoAutomatico')
+                      .set(modoAutomatico);
+                  if (modoAutomatico == true) {
+                    paradaEmergencial = false;
+                    _databaseReference
+                        .child('comandos/paradaEmergencial')
+                        .set(paradaEmergencial);
+                  }
+                });
+              },
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.info),
+            title: Text('Sobre'),
+            onTap: () {
+              //  ADICIONAR SOBRE O APLICATIVO
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.settings),
+            title: Text('Configurações'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ConfiguracoesPage()),
+              );
+            },
+          ),
+          const Padding(padding: EdgeInsets.only(top: 350)),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Fechar app'),
+            onTap: () {
+              exit(0);
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 

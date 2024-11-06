@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'global_state.dart';
 
 class GraficoPage extends StatefulWidget {
   const GraficoPage({super.key});
@@ -18,7 +19,7 @@ class _GraficoPageState extends State<GraficoPage> {
   List<double> umidadeSolo = [];
   List<double> litrosGastosPorMes = List.filled(12, 0);
   int mesSelecionado = DateTime.now().month;
-  bool incluirEsgoto = false;
+  final incluirEsgoto = GlobalState.incluirEsgoto;
   double valorGasto = 0.0;
   double litrosTotaisMes = 0.0;
   int _chartKey = 0;
@@ -322,10 +323,18 @@ class _GraficoPageState extends State<GraficoPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: 120.0),
+              padding: const EdgeInsets.only(right: 100.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const Text(
+                    'Selecione o mês',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.arrow_left, color: Colors.white),
                     onPressed: () {
@@ -338,7 +347,7 @@ class _GraficoPageState extends State<GraficoPage> {
                     },
                   ),
                   Text(
-                    'Mês $mesSelecionado',
+                    '$mesSelecionado',
                     style: const TextStyle(
                       fontSize: 18,
                       color: Colors.white,
@@ -359,8 +368,46 @@ class _GraficoPageState extends State<GraficoPage> {
                 ],
               ),
             ),
+            Card(
+              elevation: 4,
+              color: Colors.blueGrey[700],
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Valor gasto: R\$${valorGasto.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Litros gastos: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tempo total de irrigação: $tempoTotalIrrigacao',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             ExpansionTile(
-              title: const Text('Grafico dos dados de irrigação',
+              title: const Text('Grafico dos dados de irrigação mensal',
                   style: TextStyle(color: Colors.white)),
               children: [
                 Column(
@@ -473,69 +520,13 @@ class _GraficoPageState extends State<GraficoPage> {
             ),
             const SizedBox(height: 16),
             ExpansionTile(
-              title: const Text('Consumo de Agua',
+              title: const Text('Consumo de Agua Anual',
                   style: TextStyle(color: Colors.white)),
               children: [
-                Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                                'Se em sua localidade é cobrado a taxa de esgoto, selecione para calcular o valor total de irrigação por mês.',
-                                softWrap: true,
-                                style: TextStyle(color: Colors.white)),
-                          ),
-                          Checkbox(
-                            value: incluirEsgoto,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                incluirEsgoto = value!;
-                                _calcularValorGasto(mesSelecionado);
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 180.0),
-                      child: Text(
-                        'Valor total gasto: R\$${valorGasto.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 60.0),
-                      child: Text(
-                        'Litros gastos no mês selecionado: ${_formatarLitrosOuMetrosCubicos(litrosTotaisMes)}',
-                        style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 17.0, right: 110.0),
-                      child: Text(
-                        'Tempo total de irrigação no mês: $tempoTotalIrrigacao',
-                        style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
                 const Padding(
                   padding: EdgeInsets.only(top: 20.0),
                   child: Text(
-                    'Consumo anual em metros cúbicos ',
+                    'Consumo em metros cúbicos ',
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
