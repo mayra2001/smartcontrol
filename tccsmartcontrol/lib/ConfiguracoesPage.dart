@@ -1,14 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:tccsmartcontrol/ConfiguracoesPage.dart';
-import 'package:tccsmartcontrol/firebase_options.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tccsmartcontrol/graficoPage.dart';
 import 'global_state.dart';
 
 class ConfiguracoesPage extends StatefulWidget {
