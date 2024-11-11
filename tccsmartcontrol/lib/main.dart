@@ -9,6 +9,8 @@ import 'package:tccsmartcontrol/firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tccsmartcontrol/graficoPage.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class IrrigationApp extends StatefulWidget {
   const IrrigationApp({Key? key}) : super(key: key);
@@ -411,6 +413,21 @@ class _IrrigationAppState extends State<IrrigationApp> {
         ));
   }
 
+  void _launchUrl() async {
+    const url = 'https://github.com/gregor-21/smartcontrol';
+    print("Tentando abrir o link: $url");
+
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      print("Não foi possível lançar o link.");
+      throw 'Não foi possível abrir o link $url';
+    }
+  }
+
   Widget _buildDrawer() {
     return Drawer(
       child: ListView(
@@ -476,20 +493,72 @@ class _IrrigationAppState extends State<IrrigationApp> {
             ),
           ),
           ListTile(
-            leading: Icon(Icons.info),
-            title: Text('Sobre'),
-            onTap: () {
-              //  ADICIONAR SOBRE O APLICATIVO
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.settings),
-            title: Text('Configurações'),
+            leading: const Icon(Icons.settings),
+            title: const Text('Configurações'),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ConfiguracoesPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.info),
+            title: Text('Sobre'),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text("Sobre o App"),
+                    content: SingleChildScrollView(
+                      child: ListBody(
+                        children: <Widget>[
+                          const Text(
+                            "SmartControl: Aplicativo de Irrigação Autônoma",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 10),
+                          const Text(
+                            "Este aplicativo foi desenvolvido para facilitar o monitoramento e controle de irrigação de plantas de forma automática e inteligente. "
+                            "Ele utiliza sensores de umidade e temperatura conectados a um Arduino e ESP32 para medir as condições do solo e acionar a irrigação quando necessário, "
+                            "proporcionando um sistema sustentável e eficiente para o cuidado com plantas.",
+                          ),
+                          SizedBox(height: 15),
+                          const Text(
+                            "Desenvolvedores: Gregor Yuri e                 Mayra Sales",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 5),
+                          const Text(
+                            "Gregor e Mayra são estudantes de engenharia da computação e criaram este projeto como parte de seus estudos em automação residencial e Internet das Coisas (IoT).",
+                          ),
+                          SizedBox(height: 15),
+                          const Text(
+                            "Código-fonte: ",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          GestureDetector(
+                            onTap: _launchUrl,
+                            child: const Text(
+                              'Github.com/gregor-21',
+                              style: TextStyle(color: Colors.blue),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text("Fechar"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),
