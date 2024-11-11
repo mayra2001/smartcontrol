@@ -315,9 +315,8 @@ class _GraficoPageState extends State<GraficoPage> {
     return Scaffold(
       backgroundColor: Colors.grey[800],
       appBar: AppBar(
-        title: const Text('Controle de Dados',
-            softWrap: true, style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.grey[850],
+        title: const Text('Controle de Dados', softWrap: true),
+        backgroundColor: Colors.green[800],
       ),
       body: SingleChildScrollView(
         child: Column(

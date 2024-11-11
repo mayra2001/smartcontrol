@@ -147,8 +147,11 @@ class _IrrigationAppState extends State<IrrigationApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.grey[800],
         appBar: AppBar(
-          title: const Text('Irrigação Automática'),
+          title: const Text(
+            'Irrigação Automática',
+          ),
           leading: Builder(
             builder: (context) {
               return IconButton(
@@ -159,14 +162,14 @@ class _IrrigationAppState extends State<IrrigationApp> {
               );
             },
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.green[800],
         ),
         drawer: _buildDrawer(),
         body: RefreshIndicator(
           key: _refreshIndicatorKey,
           onRefresh: _updateDataFromFirebase,
-          color: Colors.blue,
-          backgroundColor: Colors.white,
+          color: Colors.green[800],
+          backgroundColor: Colors.grey[800],
           strokeWidth: 2.0,
           displacement: 40.0,
           child: ListView.builder(
@@ -176,7 +179,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
               return Column(
                 children: <Widget>[
                   Container(
-                    color: Colors.grey[200],
+                    color: Colors.grey[700],
                     padding: const EdgeInsets.all(8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -194,7 +197,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Text('Carregando...',
-                                  style: TextStyle(fontSize: 20));
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white70));
                             } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
                             } else {
@@ -202,7 +206,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                                   snapshot.data?.snapshot.value as String;
                               return Text(
                                 'Estado do Motor: $estadoMotor',
-                                style: const TextStyle(fontSize: 20),
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.white70),
                               );
                             }
                           },
@@ -221,7 +226,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Text('Carregando...',
-                                  style: TextStyle(fontSize: 20));
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white70));
                             } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
                             } else {
@@ -229,7 +235,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                                   snapshot.data?.snapshot.value as String;
                               return Text(
                                 'Temperatura: $temperatura °C',
-                                style: const TextStyle(fontSize: 20),
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.white70),
                               );
                             }
                           },
@@ -248,7 +255,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Text('Carregando...',
-                                  style: TextStyle(fontSize: 20));
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white70));
                             } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
                             } else {
@@ -256,7 +264,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                                   snapshot.data?.snapshot.value as String;
                               return Text(
                                 'Umidade: $umidade %',
-                                style: const TextStyle(fontSize: 20),
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.white70),
                               );
                             }
                           },
@@ -275,7 +284,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Text('Carregando...',
-                                  style: TextStyle(fontSize: 20));
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white70));
                             } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
                             } else {
@@ -283,7 +293,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                                   snapshot.data?.snapshot.value as String;
                               return Text(
                                 'Umidade do Solo: $umidadeSolo %',
-                                style: const TextStyle(fontSize: 20),
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.white70),
                               );
                             }
                           },
@@ -302,7 +313,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Text('Carregando...',
-                                  style: TextStyle(fontSize: 20));
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white70));
                             } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
                             } else {
@@ -310,7 +322,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                                   snapshot.data?.snapshot.value as String;
                               return Text(
                                 'Nível reservatório: $nivel',
-                                style: const TextStyle(fontSize: 20),
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.white70),
                               );
                             }
                           },
@@ -318,7 +331,10 @@ class _IrrigationAppState extends State<IrrigationApp> {
                         const SizedBox(height: 16),
                         const Text(
                           'Dados da última irrigação',
-                          style: TextStyle(fontSize: 22),
+                          style: TextStyle(
+                            fontSize: 22,
+                            color: Colors.white,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         FutureBuilder(
@@ -334,7 +350,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Text('Carregando...',
-                                  style: TextStyle(fontSize: 20));
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white70));
                             } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
                             } else {
@@ -342,7 +359,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                                   snapshot.data?.snapshot.value as String;
                               return Text(
                                 'Tempo total de irrigação: $tempoGasto',
-                                style: const TextStyle(fontSize: 20),
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.white70),
                               );
                             }
                           },
@@ -361,7 +379,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Text('Carregando...',
-                                  style: TextStyle(fontSize: 20));
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white70));
                             } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
                             } else {
@@ -369,7 +388,8 @@ class _IrrigationAppState extends State<IrrigationApp> {
                                   snapshot.data?.snapshot.value as String;
                               return Text(
                                 'Água utilizada: $aguaGasta litros',
-                                style: const TextStyle(fontSize: 20),
+                                style: const TextStyle(
+                                    fontSize: 20, color: Colors.white70),
                               );
                             }
                           },
@@ -389,7 +409,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
+                        color: Colors.green[700],
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.all(16),
@@ -399,7 +419,7 @@ class _IrrigationAppState extends State<IrrigationApp> {
                           Icon(Icons.bar_chart, size: 40),
                           SizedBox(width: 10),
                           Text(
-                            'Dados de Irrigação',
+                            'Controle de dados',
                             style: TextStyle(fontSize: 20),
                           ),
                         ],
@@ -430,27 +450,29 @@ class _IrrigationAppState extends State<IrrigationApp> {
 
   Widget _buildDrawer() {
     return Drawer(
+      backgroundColor: Colors.grey[800],
       child: ListView(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.symmetric(vertical: 2),
         children: <Widget>[
-          const DrawerHeader(
+          DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.green,
+              color: Colors.green[800],
             ),
-            child: Text(
+            child: const Text(
               'Menu',
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
+                fontSize: 30,
               ),
             ),
           ),
           ExpansionTile(
-            title: const Text('Parada emergencial!'),
+            title: const Text('Parada emergencial!',
+                style: TextStyle(color: Colors.white70)),
             children: <Widget>[
               ListTile(
-                leading: Icon(Icons.info),
-                title: const Text('Parada Emergêncial'),
+                leading: Icon(Icons.info, color: Colors.white70),
+                title: const Text('Parada Emergêncial',
+                    style: TextStyle(color: Colors.white70)),
                 trailing: Switch(
                   value: paradaEmergencial,
                   onChanged: (bool? value) {
@@ -472,8 +494,9 @@ class _IrrigationAppState extends State<IrrigationApp> {
             ],
           ),
           ListTile(
-            leading: Icon(Icons.info),
-            title: const Text('Modo Automático'),
+            leading: Icon(Icons.info, color: Colors.white70),
+            title: const Text('Modo Automático',
+                style: TextStyle(color: Colors.white70)),
             trailing: Switch(
               value: modoAutomatico,
               onChanged: (bool? value) {
@@ -493,8 +516,9 @@ class _IrrigationAppState extends State<IrrigationApp> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Configurações'),
+            leading: const Icon(Icons.settings, color: Colors.white70),
+            title: const Text('Configurações',
+                style: TextStyle(color: Colors.white70)),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
@@ -504,40 +528,49 @@ class _IrrigationAppState extends State<IrrigationApp> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.info),
-            title: Text('Sobre'),
+            leading: Icon(Icons.info, color: Colors.white70),
+            title: Text('Sobre', style: TextStyle(color: Colors.white70)),
             onTap: () {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text("Sobre o App"),
+                    backgroundColor: Colors.grey[800],
+                    title: const Text("Sobre o App",
+                        style: TextStyle(color: Colors.white70)),
                     content: SingleChildScrollView(
                       child: ListBody(
                         children: <Widget>[
                           const Text(
                             "SmartControl: Aplicativo de Irrigação Autônoma",
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white70),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           const Text(
                             "Este aplicativo foi desenvolvido para facilitar o monitoramento e controle de irrigação de plantas de forma automática e inteligente. "
                             "Ele utiliza sensores de umidade e temperatura conectados a um Arduino e ESP32 para medir as condições do solo e acionar a irrigação quando necessário, "
                             "proporcionando um sistema sustentável e eficiente para o cuidado com plantas.",
+                            style: TextStyle(color: Colors.white70),
                           ),
-                          SizedBox(height: 15),
+                          const SizedBox(height: 15),
                           const Text(
                             "Desenvolvedores: Gregor Yuri e                 Mayra Sales",
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white70),
                           ),
-                          SizedBox(height: 5),
+                          const SizedBox(height: 5),
                           const Text(
-                            "Gregor e Mayra são estudantes de engenharia da computação e criaram este projeto como parte de seus estudos em automação residencial e Internet das Coisas (IoT).",
-                          ),
-                          SizedBox(height: 15),
+                              "Gregor e Mayra são estudantes de engenharia da computação e criaram este projeto como parte de seus estudos em automação residencial e Internet das Coisas (IoT).",
+                              style: TextStyle(color: Colors.white70)),
+                          const SizedBox(height: 15),
                           const Text(
                             "Código-fonte: ",
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white70),
                           ),
                           GestureDetector(
                             onTap: _launchUrl,
@@ -551,7 +584,12 @@ class _IrrigationAppState extends State<IrrigationApp> {
                     ),
                     actions: <Widget>[
                       TextButton(
-                        child: const Text("Fechar"),
+                        child: const Text(
+                          "Fechar",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white70),
+                        ),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },

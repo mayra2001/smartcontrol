@@ -44,28 +44,33 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[800],
       appBar: AppBar(
         title: Text('Configurações'),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.green[800],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               children: [
-                Expanded(
+                const Expanded(
                   child: Text(
                     'Veja como calcular a área:',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white70),
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.info_outline),
                   onPressed: _showCalculationInfo,
                   tooltip: 'Como calcular a área',
+                  color: Colors.white70,
                 ),
               ],
             ),
@@ -78,9 +83,14 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                     keyboardType:
                         TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      labelText: 'Área de Irrigação (m²)',
-                      hintText: 'Insira a área em metros quadrados',
-                    ),
+                        focusColor: Colors.white70,
+                        labelText: 'Área de Irrigação (m²)',
+                        hintStyle: TextStyle(color: Colors.white70),
+                        labelStyle: TextStyle(color: Colors.white70),
+                        hintText: 'Insira a área em metros quadrados',
+                        iconColor: Colors.white70),
+                    cursorColor: Colors.white70,
+                    style: TextStyle(color: Colors.white70),
                     onChanged: (value) {
                       String sanitizedValue = value.replaceAll(',', '.');
                       if (sanitizedValue.endsWith('.')) {
@@ -104,6 +114,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                 else
                   IconButton(
                     icon: Icon(Icons.edit),
+                    color: Colors.white70,
                     onPressed: () {
                       setState(() {
                         _isEditing = true;
@@ -113,11 +124,12 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
               ],
             ),
             ListTile(
-              leading: Icon(Icons.info),
-              title: const Text('Ativar ou desativar calculo do esgoto'),
+              leading: Icon(Icons.info, color: Colors.white70),
+              title: const Text('Ativar ou desativar calculo do esgoto',
+                  style: TextStyle(color: Colors.white70)),
               subtitle: const Text(
-                'Se em sua localidade é cobrado a taxa de esgoto, selecione para calcular o valor total de irrigação por mês.',
-              ),
+                  'Se em sua localidade é cobrado a taxa de esgoto, selecione para calcular o valor total de irrigação por mês.',
+                  style: TextStyle(color: Colors.white70)),
               trailing: Switch(
                 value: GlobalState.incluirEsgoto,
                 onChanged: (bool? value) {
