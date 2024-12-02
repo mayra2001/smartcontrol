@@ -27,7 +27,7 @@ DHT dht(DHT_PIN, DHT_TYPE);
 const int pinoSensor = A0; // PINO UTILIZADO PELO SENSOR DE UMIDADE DO SOLO    vp
 const int pinoMotor = 23;
 const int pinoNivel = 2;
-#include <time.h> //tempo no firebase
+#include <time.h>
 #define WIFI_SSID "LIKE-SALA"
 #define WIFI_PASSWORD "992714904"
 #define API_KEY "AIzaSyD2IheRLezcWjNxckC1I1X_PWzySil-v6M"
@@ -35,9 +35,9 @@ const int pinoNivel = 2;
 #define FIREBASE_PROJECT_ID "tccsmartcontrol"
 #define USER_EMAIL "gregoryuri09@gmail.com"
 #define USER_PASSWORD "xsara01"
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define OLED_RESET -1    // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 FirebaseData fbdo;
@@ -47,21 +47,18 @@ FirebaseConfig config;
 unsigned long sendDataPrevMillis = 0;
 unsigned long count = 0;
 int LED_BUILTIN = 2;
-int valorLido; // VARIÁVEL QUE ARMAZENA O PERCENTUAL DE UMIDADE DO SOLO
-
+int valorLido;                // VARIÁVEL QUE ARMAZENA O PERCENTUAL DE UMIDADE DO SOLO
 int analogSoloSeco = 4095;    // VALOR MEDIDO COM O SOLO SECO (VOCÊ PODE FAZER TESTES E AJUSTAR ESTE VALOR)
 int analogSoloMolhado = 1500; // VALOR MEDIDO COM O SOLO MOLHADO (VOCÊ PODE FAZER TESTES E AJUSTAR ESTE VALOR)
 int percSoloSeco = 0;         // MENOR PERCENTUAL DO SOLO SECO (0% - NÃO ALTERAR)
 int percSoloMolhado = 100;    // MAIOR PERCENTUAL DO SOLO MOLHADO (100% - NÃO ALTERAR)
-
-bool modoAutomatico = false; // Estado do modo automático
-bool motorLigado = false;    // Estado do motor de água
-
+bool modoAutomatico = false;
+bool motorLigado = false;
 unsigned long tempoInicial = 0;
 unsigned long tempoFinal = 0;
 unsigned long tempoTotal = 0;
 String estadoMotor;
-
+float max_irrigacao = 0.0;
 // Variáveis e constantes para o sensor de fluxo
 const int INTERRUPCAO_SENSOR = 0;
 const int pinoFluxo = 13;
@@ -82,21 +79,17 @@ void setup()
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.println("ESP-32: Inicializado");
-  // Inicializa o display OLED
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
-  { // Endereço I2C padrão 0x3C
+  {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
       ;
   }
   display.display();
-  delay(1000); // Espera para que o display seja inicializado
+  delay(1000);
   display.clearDisplay();
-
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
   Serial.print("ESP-32: Conectando ao Wi-Fi");
-
   unsigned long ms = millis();
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -109,55 +102,44 @@ void setup()
   Serial.print("ESP-32: Conectado com IP: ");
   Serial.println(WiFi.localIP());
   Serial.println();
-
   Serial.printf("ESP-32: Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
-
   config.api_key = API_KEY;
   auth.user.email = USER_EMAIL;
   auth.user.password = USER_PASSWORD;
   config.database_url = DATABASE_URL;
   config.token_status_callback = tokenStatusCallback;
-
   Firebase.reconnectNetwork(true);
-
   fbdo.setBSSLBufferSize(4096, 1024);
   fbdo.setResponseSize(2048);
-
   Firebase.begin(&config, &auth);
-
   Firebase.setDoubleDigits(5);
-
   config.timeout.serverResponse = 10 * 1000;
-
-  configTimeNTP();                   // lendo horas
-  String timeStamp = getTimeStamp(); // Data e hora formatadas
+  configTimeNTP();
+  String timeStamp = getTimeStamp();
   Serial.println(timeStamp);
-
   dht.begin();
-  // Configura o pino do sensor de fluxo como entrada
   pinMode(pinoFluxo, INPUT_PULLUP);
-
   pinMode(pinoMotor, OUTPUT);
-
   pinMode(pinoNivel, INPUT);
-
-  // Configura a interrupção para o sensor de fluxo
   attachInterrupt(digitalPinToInterrupt(pinoFluxo), contador_pulso, FALLING);
+  digitalWrite(pinoMotor, LOW);
+  motorLigado = false;
+  estadoMotor = "Desligado";
+  Firebase.RTDB.setString(&fbdo, F("/dadosArduino/estadoMotor"), estadoMotor);
 }
 String getTimeStamp()
 {
   time_t now;
   struct tm timeinfo;
-  time(&now); // Obtém o número de segundos desde o Epoch (1 de janeiro de 1970)
+  time(&now);
   localtime_r(&now, &timeinfo);
 
   char buffer[30];
-  strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo); // Formato legível
-  return String(buffer);                                            // Retorna a data/hora formatada como string
+  strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
+  return String(buffer);
 }
 void configTimeNTP()
 {
-  // Configura o NTP com o fuso horário (GMT-3 para o Brasil, ajuste se necessário)
   configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
   Serial.print("Aguardando o tempo NTP... ");
@@ -167,12 +149,13 @@ void configTimeNTP()
     delay(1000);
   }
   Serial.println("\nHora NTP configurada!");
+  delay(1000);
 }
-
 void loop()
 {
   lerSensores();
   estadoMotor = Firebase.RTDB.getString(&fbdo, F("/dadosArduino/estadoMotor"));
+  atualizarDisplay();
   if (Firebase.RTDB.getBool(&fbdo, F("/comandos/modoAutomatico")))
   {
     modoAutomatico = fbdo.boolData();
@@ -186,26 +169,27 @@ void loop()
       digitalWrite(pinoMotor, LOW);
     }
   }
-  // modo manual parada motor
-  if (Firebase.RTDB.getBool(&fbdo, F("/comandos/motorLigado")))
+  bool paradaEmergencial = false;
+  if (Firebase.RTDB.getBool(&fbdo, F("/comandos/paradaEmergencial")))
   {
-    bool ligarmotor = fbdo.boolData();
-    if (!ligarmotor)
-    {                               // parada de emergencia
-      digitalWrite(pinoMotor, LOW); // 13  DESLIGAMOTOR
-      estadoMotor = "Desligado";
-      Firebase.RTDB.setString(&fbdo, F("/dadosArduino/estadoMotor"), estadoMotor);
-      Serial.println("motor desligado para emergencia");
-      motorLigado = false;
-      Firebase.RTDB.setBool(&fbdo, F("/comandos/atualiza"), true);
-      Firebase.RTDB.setBool(&fbdo, F("/comandos/atualiza"), false);
-    }
+    paradaEmergencial = fbdo.boolData();
+  }
+  if (paradaEmergencial)
+  {
+    digitalWrite(pinoMotor, LOW); // 13  DESLIGAMOTOR
+    estadoMotor = "Desligado";
+    Firebase.RTDB.setString(&fbdo, F("/dadosArduino/estadoMotor"), estadoMotor);
+    Serial.println("motor desligado para emergencia");
+    motorLigado = false;
+    Firebase.RTDB.setBool(&fbdo, F("/comandos/atualiza"), true);
+    Firebase.RTDB.setBool(&fbdo, F("/comandos/atualiza"), false);
     atualizarDisplay();
   }
+  delay(500);
 }
 void lerSensores()
 {
-  String nivel = lerNivel(); // por no app tambem
+  String nivel = lerNivel();
   String umidadeSolo = lerUmidadeSolo();
   String temperatura = lerTemperatura();
   String umidade = lerUmidade();
@@ -264,11 +248,14 @@ String lerUmidade()
 
 void modoautomatico()
 {
+  // String timeStamp = getTimeStamp();
+  // int horaAtual = timeStamp.substring(11, 13).toInt();
   estadoMotor = Firebase.RTDB.getString(&fbdo, F("/dadosArduino/estadoMotor"));
   bool irrigando;
   estadoMotor = fbdo.stringData();
   Serial.print("Estado do motor lido do Firebase: ");
-  Serial.println(estadoMotor); // Verifique o que está sendo lido
+  Serial.println(estadoMotor);
+
   if (estadoMotor == "Ligado")
   {
     irrigando = true;
@@ -277,70 +264,63 @@ void modoautomatico()
   {
     irrigando = false;
   }
-  // Verificar o nível do reservatório
+  int umidadesolo;
+  umidadesolo = lerUmidadeSolo().toInt();
   String nivel = lerNivel();
-  if (nivel == "Baixo")
+  // if (horaAtual >= 6 && horaAtual < 10) {
+  if (umidadesolo < 45 && !irrigando)
   {
-    if (motorLigado)
+    if (nivel == "Normal")
     {
-      // Se a bomba estiver ligada, desligue-a imediatamente
+      motorLigado = true;
+      Serial.println("Ligando bomba...");
+      digitalWrite(pinoMotor, HIGH);
+      volume_total = 0;
+      tempo_antes = millis();
+      tempoInicial = millis();
+      estadoMotor = "Ligado";
+      Firebase.RTDB.setString(&fbdo, F("/dadosArduino/estadoMotor"), estadoMotor);
+      Firebase.RTDB.setBool(&fbdo, F("/dadosArduino/mandaNotificacao"), false);
+      atualizarDisplay();
+    }
+    else
+    {
+      Serial.println("NAO E POSSIVEL IRRIGAR, ABASTEÇA O RESERVATÓRIO");
+    }
+  }
+  //}
+  bool paradaEmergencial = false;
+  while (motorLigado)
+  {
+    umidadesolo = lerUmidadeSolo().toInt();
+    nivel = lerNivel();
+    if (Firebase.RTDB.getBool(&fbdo, F("/comandos/paradaEmergencial")))
+    {
+      paradaEmergencial = fbdo.boolData();
+    }
+    if (Firebase.RTDB.getString(&fbdo, F("/comandos/aguamaxima")))
+    {
+      max_irrigacao = fbdo.stringData().toFloat();
+      Serial.print("ag_max:");
+      Serial.println(max_irrigacao);
+    }
+
+    if (umidadesolo > 80 || nivel == "Baixo" || paradaEmergencial == true || volume_total >= max_irrigacao)
+    {
       digitalWrite(pinoMotor, LOW);
-      Serial.println("Desligando bomba - nível do reservatório baixo");
       motorLigado = false;
       estadoMotor = "Desligado";
       Firebase.RTDB.setString(&fbdo, F("/dadosArduino/estadoMotor"), estadoMotor);
-      Firebase.RTDB.setBool(&fbdo, F("/dadosArduino/mandaNotificacao"), true);
       tempoFinal = millis();
-      tempoTotal = (tempoFinal - tempoInicial) / 1000; // Tempo total em segundos
+      tempoTotal = (tempoFinal - tempoInicial) / 1000;
       enviarTempoParaFirebase();
+      atualizarDisplay();
     }
-    return; // Sai da função, não faz mais nada se o nível estiver baixo
-  }
-
-  // Verifica a umidade do solo e controla o motor
-  int umidadesolo = lerUmidadeSolo().toInt();
-  if (umidadesolo < 45 && !irrigando)
-  {
-    motorLigado = true;
-    Serial.println("Ligando bomba...");
-    digitalWrite(pinoMotor, HIGH); // Ativa a bomba
-    volume_total = 0;              // Zera a contagem do volume total
-    tempo_antes = millis();        // Reinicia o tempo
-    tempoInicial = millis();
-    estadoMotor = "Ligado";
-    Firebase.RTDB.setString(&fbdo, F("/dadosArduino/estadoMotor"), estadoMotor);
-    Firebase.RTDB.setBool(&fbdo, F("/dadosArduino/mandaNotificacao"), false);
-  }
-
-  // Verifica continuamente a umidade do solo e o nível do reservatório
-  if (motorLigado)
-  {
-    while (motorLigado)
+    if (motorLigado)
     {
-      umidadesolo = lerUmidadeSolo().toInt(); // Atualize o valor da umidade do solo
-      nivel = lerNivel();                     // Atualiza o valor do nível do reservatório
-
-      if (umidadesolo > 70 || nivel == "Baixo")
-      {
-        Serial.println("Desligando bomba...");
-        digitalWrite(pinoMotor, LOW); // Desativa a bomba
-        motorLigado = false;
-        estadoMotor = "Desligado";
-        Firebase.RTDB.setString(&fbdo, F("/dadosArduino/estadoMotor"), estadoMotor);
-        tempoFinal = millis();
-        tempoTotal = (tempoFinal - tempoInicial) / 1000; // Tempo total em segundos
-        enviarTempoParaFirebase();
-      }
-
-      // Ler o fluxo de água enquanto a bomba estiver ligada
-      if (motorLigado)
-      {
-        lerFluxo();
-      }
-
-      // Delay curto para evitar sobrecarga de leitura contínua
-      delay(500); // Ajuste o tempo conforme necessário
+      lerFluxo();
     }
+    delay(500);
   }
 }
 
@@ -372,23 +352,21 @@ void atualizarDisplay()
   display.setCursor(0, 0);
   display.println("Irrigacao");
 
-  // Estado do motor
+  estadoMotor = Firebase.RTDB.getString(&fbdo, F("/dadosArduino/estadoMotor"));
+  estadoMotor = fbdo.stringData();
   display.print("Bomba: ");
   display.println(estadoMotor);
 
-  // Temperatura
   String temperatura = lerTemperatura();
   display.print("Temp: ");
   display.print(temperatura);
   display.println(" C");
 
-  // Umidade do ar
   String umidade = lerUmidade();
   display.print("Umid. Ar: ");
   display.print(umidade);
   display.println(" %");
 
-  // Umidade do solo
   String umidadeSolo = lerUmidadeSolo();
   display.print("Umid. Solo: ");
   display.print(umidadeSolo);
@@ -397,10 +375,18 @@ void atualizarDisplay()
   String nivel = lerNivel();
   display.print("Reservatorio: ");
   display.println(nivel);
-
+  String volume_total_firebase;
+  if (Firebase.RTDB.getString(&fbdo, F("/dadosArduino/aguaGasta")))
+  {
+    volume_total_firebase = fbdo.stringData();
+  }
+  else
+  {
+    volume_total_firebase = "N/A";
+  }
   display.println("Ultima irrigacao");
   display.print("Agua gasta: ");
-  display.print(volume_total);
+  display.print(volume_total_firebase);
   display.println(" L");
 
   display.display();
@@ -414,17 +400,14 @@ void enviarTempoParaFirebase()
   Serial.println("TempoLigado");
   Serial.println(tempoLigado);
   Firebase.RTDB.setString(&fbdo, F("/dadosArduino/tempoLigado"), tempoLigado.c_str());
-  // Arredonda volume_total para duas casas decimais e converte para String
   String volume_total_arredondado = String(volume_total, 2);
   Serial.println("Volume Total Gasto");
   Serial.println(volume_total_arredondado);
 
-  String timeStamp = getTimeStamp(); // Data e hora formatadas
+  String timeStamp = getTimeStamp();
   Serial.println(timeStamp);
-  // coletar os dados dos sensorres atualmente
   String umidadeSolo = lerUmidadeSolo();
 
-  // tempo ligado esta sendo lido acima
   float umidade = dht.readHumidity();
   float temperatura = dht.readTemperature();
 
@@ -441,11 +424,7 @@ void enviarTempoParaFirebase()
 
     Serial.println("update");
 
-    if (Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "umidade") &&
-        Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "temperatura") &&
-        Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "umidadesolo") &&
-        Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "aguagasta") &&
-        Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "tempoligado"))
+    if (Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "umidade") && Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "temperatura") && Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "umidadesolo") && Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "aguagasta") && Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), content.raw(), "tempoligado"))
     {
 
       Serial.printf("ok\n%s\n\n", fbdo.payload().c_str());
@@ -455,7 +434,8 @@ void enviarTempoParaFirebase()
       Serial.println(fbdo.errorReason());
     }
   }
-
+  Firebase.RTDB.setBool(&fbdo, F("/comandos/atualiza"), true);
+  Firebase.RTDB.setBool(&fbdo, F("/comandos/atualiza"), false);
   Firebase.RTDB.setString(&fbdo, F("/dadosArduino/aguaGasta"), volume_total_arredondado);
   Firebase.RTDB.setBool(&fbdo, F("/dadosArduino/mandaNotificacao"), true);
 }
