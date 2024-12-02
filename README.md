@@ -10,7 +10,7 @@ O *SmartControl* é uma solução inovadora de controle de irrigação autônomo
 - *Histórico de Dados:* Acesso a registros históricos para análise e otimização do sistema de irrigação.  
 - *Controle Manual e Automático:* Permite ativar/desativar a irrigação manualmente ou confiar no controle automático baseado nos dados dos sensores.  
 - *Calculadora de Produtividade:* Ferramenta para estimar ganhos e produtividade com base no uso eficiente do equipamento.
-- 
+ 
 🛠️ *Tecnologias Utilizadas*
 
 - *Flutter:* Framework para desenvolvimento da interface mobile.  
