@@ -35,7 +35,13 @@ Nota: Certifique-se de que o ESP32 esteja configurado corretamente com o código
 
 Com o *SmartControl*, você combina tecnologia e sustentabilidade para transformar a gestão hídrica e otimizar seus resultados! 🌾💧
 
-Contato do desenvolvedor:
-Gregor yuri, 
-Número: (61) 99271-4904
+Contato dos desenvolvedores:
+
+Gregor yuri
+Número: (61) 99271-4904 
 e-mail:gregoryuri09@gmail.com 
+
+
+Mayra Sales 
+número: (61) 98174-0311
+e-mail: maysales2001@gmail.com
