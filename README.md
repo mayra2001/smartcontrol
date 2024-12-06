@@ -34,3 +34,8 @@ flutter run
 Nota: Certifique-se de que o ESP32 esteja configurado corretamente com o código de monitoramento e que os dados estejam sendo enviados para o Firebase.
 
 Com o *SmartControl*, você combina tecnologia e sustentabilidade para transformar a gestão hídrica e otimizar seus resultados! 🌾💧
+
+Contato do desenvolvedor:
+Gregor yuri, 
+Número: (61) 99271-4904
+e-mail:gregoryuri09@gmail.com 
