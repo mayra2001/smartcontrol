@@ -28,13 +28,13 @@ const int pinoSensor = A0; // PINO UTILIZADO PELO SENSOR DE UMIDADE DO SOLO    v
 const int pinoMotor = 23;
 const int pinoNivel = 2;
 #include <time.h>
-#define WIFI_SSID "LIKE-SALA"
-#define WIFI_PASSWORD "992714904"
+#define WIFI_SSID "iesb"
+#define WIFI_PASSWORD "2012082054"
 #define API_KEY "AIzaSyD2IheRLezcWjNxckC1I1X_PWzySil-v6M"
 #define DATABASE_URL "https://tccsmartcontrol-default-rtdb.firebaseio.com/"
 #define FIREBASE_PROJECT_ID "tccsmartcontrol"
-#define USER_EMAIL "gregoryuri09@gmail.com"
-#define USER_PASSWORD "xsara01"
+#define USER_EMAIL "maysales2001@gmail.com"
+#define USER_PASSWORD "2012082054"
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
